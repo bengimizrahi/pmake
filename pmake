@@ -189,7 +189,7 @@ if __name__ == "__main__":
                 COLORS["yellow"], libFilePath, COLORS["default"])
             objects = " ".join(moduleObjectFiles)
             cmd = " ".join((
-                "%sar" % CROSS_COMPILE,
+                AR,
                 "cr",
                 libFilePath,
                 objects
