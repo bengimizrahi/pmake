@@ -8,6 +8,7 @@ import sys
 import imp
 import os
 import shutil
+import string
 
 if __name__ == "__main__":
 
@@ -56,7 +57,8 @@ if __name__ == "__main__":
             acBuildDirectory, COLORS["default"])
         try:
             shutil.rmtree(acBuildDirectory)
-        except OSError:
+        except OSError, e:
+            print e
             pass
         exit(0)
 
@@ -137,8 +139,9 @@ if __name__ == "__main__":
         def anyDirtyFileInDependencyFile():
             try:
                 with file(dependFilePath) as depend:
+                    trans = string.maketrans('\\\n', '  ')
                     t1, _, t2 = (t.strip() for t in
-                        depend.read().strip().partition(":"))
+                        depend.read().translate(trans).strip().partition(":"))
                     obj, deps = os.path.join(moduleBuildDirectory, t1), t2.split()
                     dirtyFiles = filter(lambda d: modifyTime(d) > modifyTime(obj),
                         deps)
