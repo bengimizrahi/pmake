@@ -182,7 +182,9 @@ if __name__ == "__main__":
                 createDependencyFile()
 
         # Create library for the module
-        libFilePath = os.path.join(acBuildDirectory, "lib%s.a" % name)
+        libFilePath = os.path.join(acBuildDirectory,
+             MODULES[name]["directory"],
+             "lib%s.a" % name)
         archiveFiles.append(libFilePath)
         if not os.path.exists(libFilePath) or any(
                 map(lambda o: modifyTime(libFilePath) < modifyTime(o),
