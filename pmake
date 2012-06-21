@@ -69,7 +69,7 @@ if __name__ == "__main__":
     # Check if desired modules exists
     for moduleName in ACTIVE_MODULES:
         if not MODULES.get(moduleName):
-            print "Error: No module named %s found in MODULES."
+            print "Error: No module named %s found in MODULES." % moduleName
             exit(1)
     activeModules = dict(filter(lambda m: m[0] in ACTIVE_MODULES,
         MODULES.iteritems()))
