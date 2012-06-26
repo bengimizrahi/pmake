@@ -143,8 +143,8 @@ if __name__ == "__main__":
                     t1, _, t2 = (t.strip() for t in
                         depend.read().translate(trans).strip().partition(":"))
                     obj, deps = os.path.join(moduleBuildDirectory, t1), t2.split()
-                    dirtyFiles = filter(lambda d: modifyTime(d) > modifyTime(obj),
-                        deps)
+                    dirtyFiles = set(filter(lambda d: modifyTime(d) > modifyTime(obj),
+                        deps))
                     if dirtyFiles:
                         print "%sDep: %s%s%s%s <- %s" % (
                             COLORS["blue"], COLORS["default"],
