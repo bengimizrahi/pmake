@@ -3,7 +3,6 @@
 # Author: Bengi Mizrahi
 # Date: 05.06.2012
 
-from common import cache, COLORS
 import sys
 import imp
 import os
@@ -11,6 +10,11 @@ import shutil
 import string
 
 if __name__ == "__main__":
+
+    COLORS = { "blue": "\033[1;34m", "default": "\x1B[m", "yellow": "\033[1;33m",
+        "magenda": "\033[1;31m", "white": "\033[1;37m", "green": "\033[1;32m",
+        "red": "\033[1;31m",
+    }
 
     # Get the target
     target = "all"
