@@ -1,3 +1,5 @@
+COLOR = True
+
 CROSS_COMPILE = "arm-none-linux-gnueabi-"
 CC = CROSS_COMPILE + "gcc"
 CPPC = CROSS_COMPILE + "g++"
