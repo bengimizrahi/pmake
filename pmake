@@ -13,6 +13,7 @@ COLORS = { "blue": "\033[1;34m", "default": "\x1B[m", "yellow": "\033[1;33m",
     "magenda": "\033[1;31m", "white": "\033[1;37m", "green": "\033[1;32m",
     "red": "\033[1;31m",
 }
+NOCOLORS = dict(map(lambda c: (c, ""), COLORS.iterkeys()))
 
 class File:
     def __init__(self, filename, directory, extension, filePath):
@@ -54,6 +55,10 @@ if __name__ == "__main__":
     except IOError:
         print "Error: No such file: Makefile.py"
         exit(1)
+    
+# Determine if colorful output is desired
+    if not COLOR:
+        COLORS = NOCOLORS
 
     # If BUILD_DIR does not exist, create it.
     if not os.path.exists(BUILD_DIR):
