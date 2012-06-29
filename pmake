@@ -9,12 +9,38 @@ import os
 import shutil
 import string
 
-if __name__ == "__main__":
+COLORS = { "blue": "\033[1;34m", "default": "\x1B[m", "yellow": "\033[1;33m",
+    "magenda": "\033[1;31m", "white": "\033[1;37m", "green": "\033[1;32m",
+    "red": "\033[1;31m",
+}
 
-    COLORS = { "blue": "\033[1;34m", "default": "\x1B[m", "yellow": "\033[1;33m",
-        "magenda": "\033[1;31m", "white": "\033[1;37m", "green": "\033[1;32m",
-        "red": "\033[1;31m",
-    }
+class File:
+    def __init__(self, filename, directory, extension, filePath):
+        self.filename = filename
+        self.canonical = filename.rstrip(extension)
+        self.directory = directory
+        self.extension = extension
+        self.filePath = filePath
+    def dependFilePath(self):
+        return os.path.join(self.directory, "%s.d" % self.canonical)
+    def objectFilePath(self):
+        return os.path.join(self.directory, "%s.o" % self.canonical)
+    def __repr__(self):
+        return "`%s`/%s .%s" % (self.directory, self.canonical, self.extension)
+
+def scanSourceFiles(module):
+    results = []
+    extensions = LANGUAGE_SETTINGS[module["language"]]["sourceext"]
+    for rootdir, subdirs, files in os.walk(module["directory"]):
+        for f in files:
+            el = filter(lambda e: f.endswith(e), extensions)
+            if el:
+                ext = el.pop()
+                results.append(File(f, rootdir, ext, os.path.join(rootdir, f)))
+    return results
+
+
+if __name__ == "__main__":
 
     # Get the target
     target = "all"
@@ -98,10 +124,7 @@ if __name__ == "__main__":
             os.makedirs(moduleBuildDirectory)
 
         # List all source files
-        sourceDirectory = module["directory"]
-        sourceFileExtensions = LANGUAGE_SETTINGS[module["language"]]["sourceext"]
-        sourceFiles = filter(lambda f: any(map(lambda e: f.endswith(e),
-            sourceFileExtensions)), os.listdir(sourceDirectory))
+        sourceFiles = scanSourceFiles(module)
 
         # Compile each source file
         def createObjectFile():
@@ -116,8 +139,10 @@ if __name__ == "__main__":
                 objectFilePath))
             print "%sCompile:%s %s%s%s" % (
                 COLORS["blue"], COLORS["default"],
-                COLORS["yellow"], sourceFilePath, COLORS["default"])
+                COLORS["yellow"], sourceFile.filePath, COLORS["default"])
             print "%s%s%s" % (COLORS["white"], cmd, COLORS["default"])
+            if not os.path.exists(os.path.join(acBuildDirectory, sourceDirectory)):
+                os.makedirs(os.path.join(acBuildDirectory, sourceDirectory))
             rt = os.system(cmd)
             if rt:
                 print "%sError:%smake.py exited with error code %d" % (
@@ -146,7 +171,7 @@ if __name__ == "__main__":
                     trans = string.maketrans('\\\n', '  ')
                     t1, _, t2 = (t.strip() for t in
                         depend.read().translate(trans).strip().partition(":"))
-                    obj, deps = os.path.join(moduleBuildDirectory, t1), t2.split()
+                    obj, deps = os.path.join(acBuildDirectory, sourceDirectory, t1), t2.split()
                     dirtyFiles = set(filter(lambda d: modifyTime(d) > modifyTime(obj),
                         deps))
                     if dirtyFiles:
@@ -156,24 +181,18 @@ if __name__ == "__main__":
                              ", ".join(dirtyFiles))
                     return bool(dirtyFiles)
             except IOError:
-                print "File %s not found" % dependFilePath
+                print "File %s not found" % sourceFile.dependFilePath()
                 return True
         (NO_OBJECT_FILE_FOUND,
          DEPENDENCIES_ARE_RECENT_THAN_OBJECT_FILE,
          OBJECT_FILE_IS_THE_MOST_RECENT) = range(3)
         compiler = LANGUAGE_SETTINGS[module["language"]]["compiler"]
         atLeastOneObjectFileCreated = False
-        moduleObjectFiles = list()
         for sourceFile in sourceFiles:
-            extension = filter(lambda e: sourceFile.endswith(e),
-                sourceFileExtensions).pop()
-            sourceFileLeftSide = sourceFile.rstrip(extension)
-            sourceFilePath = os.path.join(sourceDirectory, sourceFile)
-            objectFilePath = "%s/%s.o" % (moduleBuildDirectory,
-                sourceFileLeftSide)
-            moduleObjectFiles.append(objectFilePath)
-            dependFilePath = "%s/%s.d" % (moduleBuildDirectory,
-                sourceFileLeftSide)
+            sourceFilePath = sourceFile.filePath
+            objectFilePath = os.path.join(acBuildDirectory, sourceFile.objectFilePath())
+            dependFilePath = os.path.join(acBuildDirectory, sourceFile.dependFilePath())
+            sourceDirectory = sourceFile.directory
             if not os.path.exists(objectFilePath):
                 condition = NO_OBJECT_FILE_FOUND
             elif anyDirtyFileInDependencyFile():
@@ -186,9 +205,11 @@ if __name__ == "__main__":
                 createDependencyFile()
 
         # Create library for the module
+        moduleObjectFiles = map(lambda s: os.path.join(acBuildDirectory, s.objectFilePath()),
+            sourceFiles)
         libFilePath = os.path.join(acBuildDirectory,
-             MODULES[name]["directory"],
-             "lib%s.a" % name)
+            MODULES[name]["directory"],
+            "lib%s.a" % name)
         archiveFiles.append(libFilePath)
         if not os.path.exists(libFilePath) or any(
                 map(lambda o: modifyTime(libFilePath) < modifyTime(o),
