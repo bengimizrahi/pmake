@@ -175,7 +175,7 @@ if __name__ == "__main__":
                     dirtyFiles = set(filter(lambda d: modifyTime(d) > modifyTime(obj),
                         deps))
                     if dirtyFiles:
-                        print "%sDep: %s%s%s%s <- %s" % (
+                        print "%sDep: %s%s%s%s -> %s" % (
                             COLORS["blue"], COLORS["default"],
                             COLORS["yellow"], obj, COLORS["default"],
                              ", ".join(dirtyFiles))
