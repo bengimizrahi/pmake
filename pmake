@@ -31,7 +31,7 @@ class File:
 
 def scanSourceFiles(module):
     results = []
-    extensions = module["sourceext"]
+    extensions = module["sourceexts"]
     for rootdir, subdirs, files in os.walk(module["directory"]):
         for f in files:
             el = filter(lambda e: f.endswith(e), extensions)
@@ -59,6 +59,12 @@ if __name__ == "__main__":
 # Determine if colorful output is desired
     if not COLOR:
         COLORS = NOCOLORS
+
+    # Process COMPILER
+    compiler = {}
+    for cmpl, exts in COMPILER.iteritems():
+        for ext in exts:
+            compiler[ext] = cmpl 
 
     # If BUILD_DIR does not exist, create it.
     if not os.path.exists(BUILD_DIR):
@@ -134,7 +140,7 @@ if __name__ == "__main__":
         # Compile each source file
         def createObjectFile():
             cmd = " ".join((
-                compiler,
+                compiler[sourceExtension],
                 " ".join(activeConfiguration["flags"]),
                 " ".join(module["defines"]),
                 " ".join(("-I%s" % i for i in 
@@ -159,7 +165,7 @@ if __name__ == "__main__":
                 exit(rt)
         def createDependencyFile():
             cmd = " ".join((
-                compiler,
+                compiler[sourceExtension],
                 "-MM",
                 " ".join(activeConfiguration["flags"]),
                 " ".join(module["defines"]),
@@ -199,13 +205,13 @@ if __name__ == "__main__":
         (NO_OBJECT_FILE_FOUND,
          DEPENDENCIES_ARE_RECENT_THAN_OBJECT_FILE,
          OBJECT_FILE_IS_THE_MOST_RECENT) = range(3)
-        compiler = LANGUAGE_SETTINGS[module["language"]]["compiler"]
         atLeastOneObjectFileCreated = False
         for sourceFile in sourceFiles:
             sourceFilePath = sourceFile.filePath
             objectFilePath = os.path.join(acBuildDirectory, sourceFile.objectFilePath())
             dependFilePath = os.path.join(acBuildDirectory, sourceFile.dependFilePath())
             sourceDirectory = sourceFile.directory
+            sourceExtension = sourceFile.extension
             if not os.path.exists(objectFilePath):
                 condition = NO_OBJECT_FILE_FOUND
             elif anyDirtyFileInDependencyFile():
