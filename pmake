@@ -137,7 +137,11 @@ if __name__ == "__main__":
                 compiler,
                 " ".join(activeConfiguration["flags"]),
                 " ".join(module["defines"]),
-                " ".join(("-I%s" % i for i in module["incpaths"])),
+                " ".join(("-I%s" % i for i in 
+                    [os.path.join(
+                        module["directory"],
+                        module.get("includedir", ".")
+                    )] + module["incpaths"])),
                 "-c",
                 sourceFilePath,
                 "-o",
@@ -159,7 +163,11 @@ if __name__ == "__main__":
                 "-MM",
                 " ".join(activeConfiguration["flags"]),
                 " ".join(module["defines"]),
-                " ".join(("-I%s" % i for i in module["incpaths"])),
+                " ".join(("-I%s" % i for i in 
+                    [os.path.join(
+                        module["directory"],
+                        module.get("includedir", ".")
+                    )] + module["incpaths"])),
                 sourceFilePath,
                 "-o",
                 dependFilePath))
