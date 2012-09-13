@@ -31,7 +31,7 @@ class File:
 
 def scanSourceFiles(module):
     results = []
-    extensions = LANGUAGE_SETTINGS[module["language"]]["sourceext"]
+    extensions = module["sourceext"]
     for rootdir, subdirs, files in os.walk(module["directory"]):
         for f in files:
             el = filter(lambda e: f.endswith(e), extensions)
@@ -110,7 +110,7 @@ if __name__ == "__main__":
         MODULES.iteritems()))
 
     # Check if desired modules are valid
-    requiredModuleParameters = ["directory", "language"]
+    requiredModuleParameters = ["directory",]
     for name, module in activeModules.iteritems():
         for p in requiredModuleParameters:
             if not module.get(p):
