@@ -56,7 +56,7 @@ if __name__ == "__main__":
         print "Error: No such file: Makefile.py"
         exit(1)
     
-# Determine if colorful output is desired
+    # Determine if colorful output is desired
     if not COLOR:
         COLORS = NOCOLORS
 
