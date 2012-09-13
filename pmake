@@ -141,6 +141,8 @@ if __name__ == "__main__":
         def createObjectFile():
             cmd = " ".join((
                 compiler[sourceExtension],
+                '-DBUILD_USER_NAME="%s"' % BUILD_USER["name"],
+                '-DBUILD_USER_EMAIL="%s"' % BUILD_USER["email"],
                 " ".join(activeConfiguration["flags"]),
                 " ".join(module["defines"]),
                 " ".join(("-I%s" % i for i in 
