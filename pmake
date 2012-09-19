@@ -127,14 +127,6 @@ if __name__ == "__main__":
     activeModules = dict(filter(lambda m: m[0] in ACTIVE_MODULES,
         MODULES.iteritems()))
 
-    # Check if desired modules are valid
-    requiredModuleParameters = ["directory",]
-    for name, module in activeModules.iteritems():
-        for p in requiredModuleParameters:
-            if not module.get(p):
-                print "Error: Module %s misses parameter: %s" % (name, p)
-                exit(1)
-
     # Build each active module
     archiveFiles = list()
     atLeastOneArchiveFileCreated = False
