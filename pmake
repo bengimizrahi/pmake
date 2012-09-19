@@ -139,6 +139,14 @@ if __name__ == "__main__":
     atLeastOneArchiveFileCreated = False
     for name, module in activeModules.iteritems():
 
+        # Setup default module parameters
+        if not module.get("directory"):
+            module["directory"] = name
+        if not module.get("incpaths"):
+            module["incpaths"] = []
+        if not module.get("defines"):
+            module["defines"] = []
+
         # Create module build directory
         moduleBuildDirectory = os.path.join(acBuildDirectory,
             module["directory"])
