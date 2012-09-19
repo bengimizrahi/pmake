@@ -97,6 +97,10 @@ if __name__ == "__main__":
     acBuildDirectory = os.path.join(BUILD_DIR,
         activeConfiguration["buildsubdir"])
 
+    # Create the active configuration build sub directory
+    if not os.path.exists(acBuildDirectory):
+        os.makedirs(acBuildDirectory)
+
     # Clean the active configuration build sub directory
     # if target == "clean"
     if target == "clean":
@@ -114,9 +118,6 @@ if __name__ == "__main__":
                 system("cd -") 
         exit(0)
 
-    # Create the active configuration build sub directory
-    if not os.path.exists(acBuildDirectory):
-        os.makedirs(acBuildDirectory)
 
     # Check if desired modules exists
     for moduleName in ACTIVE_MODULES:
