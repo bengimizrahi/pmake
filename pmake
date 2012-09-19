@@ -107,6 +107,11 @@ if __name__ == "__main__":
         except OSError, e:
             print e
             pass
+        for name, module in activeModules.iteritems():
+            if module.get("cleancmd"):
+                system("cd %s" % module["directory"])
+                system(module["cleancmd"])
+                system("cd -") 
         exit(0)
 
     # Create the active configuration build sub directory
