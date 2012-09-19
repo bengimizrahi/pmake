@@ -101,6 +101,14 @@ if __name__ == "__main__":
     if not os.path.exists(acBuildDirectory):
         os.makedirs(acBuildDirectory)
 
+    # Check if desired modules exists
+    notFound = filter(lambda m: not m in MODULES.keys(), ACTIVE_MODULES)
+    if notFound:
+        print "Error: No module(s) named %s found in MODULES." % notFound 
+        exit(1)
+    activeModules = dict(filter(lambda m: m[0] in ACTIVE_MODULES,
+        MODULES.iteritems()))
+
     # Clean the active configuration build sub directory
     # if target == "clean"
     if target == "clean":
@@ -117,15 +125,6 @@ if __name__ == "__main__":
                 system(module["cleancmd"])
                 system("cd -") 
         exit(0)
-
-
-    # Check if desired modules exists
-    for moduleName in ACTIVE_MODULES:
-        if not MODULES.get(moduleName):
-            print "Error: No module named %s found in MODULES." % moduleName
-            exit(1)
-    activeModules = dict(filter(lambda m: m[0] in ACTIVE_MODULES,
-        MODULES.iteritems()))
 
     # Build each active module
     archiveFiles = list()
