@@ -6,6 +6,7 @@
 import sys
 import imp
 import os
+import re
 import shutil
 import string
 
@@ -31,13 +32,18 @@ class File:
 
 def scanSourceFiles(module):
     results = []
-    extensions = module["sourceexts"]
+    regex = None
+    if module.get("sourcefilter"):
+        regex = re.compile(module.get("sourcefilter"))
     for rootdir, subdirs, files in os.walk(module["directory"]):
         for f in files:
+            if regex and not regex.match(f):
+                continue
             el = filter(lambda e: f.endswith(e), extensions)
             if el:
                 ext = el.pop()
-                results.append(File(f, rootdir, ext, os.path.join(rootdir, f)))
+                results.append(File(f, rootdir, ext,
+                    os.path.join(rootdir, f)))
     return results
 
 
@@ -135,6 +141,7 @@ if __name__ == "__main__":
             os.makedirs(moduleBuildDirectory)
 
         # List all source files
+        extensions = reduce(lambda a, b: a + b, COMPILER.values())
         sourceFiles = scanSourceFiles(module)
 
         # Compile each source file
