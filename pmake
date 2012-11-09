@@ -19,7 +19,7 @@ NOCOLORS = dict(map(lambda c: (c, ""), COLORS.iterkeys()))
 class File:
     def __init__(self, filename, directory, extension, filePath):
         self.filename = filename
-        self.canonical = filename.rstrip(extension)
+        self.canonical = os.path.splitext(filename)[0]
         self.directory = directory
         self.extension = extension
         self.filePath = filePath
