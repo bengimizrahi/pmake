@@ -10,12 +10,16 @@ import re
 import shutil
 import string
 import datetime
+import inspect
 
 COLORS = { "blue": "\033[1;34m", "default": "\x1B[m", "yellow": "\033[1;33m",
     "magenda": "\033[1;31m", "white": "\033[1;37m", "green": "\033[1;32m",
     "red": "\033[1;31m",
 }
 NOCOLORS = dict(map(lambda c: (c, ""), COLORS.iterkeys()))
+
+class Observer(object):
+    pass
 
 class File:
     def __init__(self, filename, directory, extension, filePath):
@@ -141,10 +145,23 @@ if __name__ == "__main__":
                 system("cd -") 
         exit(0)
 
+    # Get Observer subclasses
+    observers = map(lambda oc: oc(),
+        filter(lambda oc: inspect.isclass(oc) and
+        issubclass(oc, Observer), locals().values()))
+
+    # Call observer.beforeBuilding()
+    map(lambda o: o.beforeBuilding(),
+        filter(lambda o: hasattr(o, "beforeBuilding"), observers))
+
     # Build each active module
     archiveFiles = list()
     atLeastOneArchiveFileCreated = False
     for name, module in activeModules.iteritems():
+
+        # Call observer.beforeBuildingModule()
+        map(lambda o: o.beforeBuildingModule(name, module),
+            filter(lambda o: hasattr(o, "beforeBuildingModule"), observers))
 
         # Setup default module parameters
         if not module.get("directory"):
@@ -262,9 +279,22 @@ if __name__ == "__main__":
             else:
                 condition = OBJECT_FILE_IS_THE_MOST_RECENT
             if condition != OBJECT_FILE_IS_THE_MOST_RECENT:
+
+                # Call observer.beforeCompilingSource()
+                map(lambda o: o.beforeCompilingSource(name, module, sourceFile),
+                    filter(lambda o: hasattr(o, "beforeCompilingSource"), observers))
+
                 createObjectFile()
                 atLeastOneObjectFileCreated = True
                 createDependencyFile()
+
+                # Call observer.afterCompilingSource()
+                map(lambda o: o.afterCompilingSource(name, module, sourceFile),
+                    filter(lambda o: hasattr(o, "afterCompilingSource"), observers))
+
+        # Call observer.beforeArchiving()
+        map(lambda o: o.beforeArchiving(name, module),
+            filter(lambda o: hasattr(o, "beforeArchiving"), observers))
 
         # Create library for the module
         moduleObjectFiles = map(lambda s: os.path.join(acBuildDirectory, s.objectFilePath()),
@@ -293,6 +323,14 @@ if __name__ == "__main__":
                     COLORS["red"], rt, COLORS["default"])
                 exit(rt)
             atLeastOneArchiveFileCreated = True
+
+        # Call observer.afterBuildingModule()
+        map(lambda o: o.afterBuildingModule(name, module),
+            filter(lambda o: hasattr(o, "afterBuildingModule"), observers))
+
+    # Call observer.beforeLinking()
+    map(lambda o: o.beforeLinking(),
+        filter(lambda o: hasattr(o, "beforeLinking"), observers))
 
     # Link all object files
     if not "APPLICATION_NAME" in vars():
@@ -324,3 +362,7 @@ if __name__ == "__main__":
                 COLORS["red"], COLORS["default"], rt)
             exit(rt)
         shutil.copy(targetFilePath, APPLICATION_NAME)
+
+    # Call observer.afterBuilding()
+    map(lambda o: o.afterBuilding(),
+        filter(lambda o: hasattr(o, "afterBuilding"), observers))
