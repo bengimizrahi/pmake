@@ -61,6 +61,9 @@ if __name__ == "__main__":
     # Get current date/time
     now = datetime.datetime.now()
 
+    # Get project root directory
+    projectRootDirectory = os.getcwd()
+
     # Get the target
     target = "all"
     if len(sys.argv) == 2:
@@ -155,10 +158,9 @@ if __name__ == "__main__":
         if module.get("extbuildcmd"):
             print "%s%s%s" % (COLORS["yellow"], module["extbuildcmd"],
                 COLORS["default"])
-            print os.path.abspath(os.curdir)
             os.chdir(module["directory"])
             os.system(module["extbuildcmd"])
-            os.chdir("..")
+            os.chdir(projectRootDirectory)
             continue
 
         # Create module build directory
