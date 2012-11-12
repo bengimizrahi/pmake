@@ -29,7 +29,8 @@ class File:
     def objectFilePath(self):
         return os.path.join(self.directory, "%s.o" % self.canonical)
     def __repr__(self):
-        return "`%s`/%s .%s" % (self.directory, self.canonical, self.extension)
+        return "`%s`/%s .%s" % (self.directory, self.canonical,
+            self.extension)
 
 def scanSourceFiles(module):
     results = []
@@ -215,10 +216,12 @@ if __name__ == "__main__":
                 with file(dependFilePath) as depend:
                     trans = string.maketrans('\\\n', '  ')
                     t1, _, t2 = (t.strip() for t in
-                        depend.read().translate(trans).strip().partition(":"))
-                    obj, deps = os.path.join(acBuildDirectory, sourceDirectory, t1), t2.split()
-                    dirtyFiles = set(filter(lambda d: modifyTime(d) > modifyTime(obj),
-                        deps))
+                        depend.read().translate(trans).strip().partition(
+                            ":"))
+                    obj, deps = os.path.join(acBuildDirectory,
+                        sourceDirectory, t1), t2.split()
+                    dirtyFiles = set(filter(
+                        lambda d: modifyTime(d) > modifyTime(obj), deps))
                     if dirtyFiles:
                         print "%sDep: %s%s%s%s -> %s" % (
                             COLORS["blue"], COLORS["default"],
@@ -234,8 +237,10 @@ if __name__ == "__main__":
         atLeastOneObjectFileCreated = False
         for sourceFile in sourceFiles:
             sourceFilePath = sourceFile.filePath
-            objectFilePath = os.path.join(acBuildDirectory, sourceFile.objectFilePath())
-            dependFilePath = os.path.join(acBuildDirectory, sourceFile.dependFilePath())
+            objectFilePath = os.path.join(acBuildDirectory,
+                sourceFile.objectFilePath())
+            dependFilePath = os.path.join(acBuildDirectory,
+                sourceFile.dependFilePath())
             sourceDirectory = sourceFile.directory
             sourceExtension = sourceFile.extension
             if not os.path.exists(objectFilePath):
