@@ -151,6 +151,16 @@ if __name__ == "__main__":
         if not module.get("defines"):
             module["defines"] = []
 
+        # If extbuildcmd exists, build with the external tool
+        if module.get("extbuildcmd"):
+            print "%s%s%s" % (COLORS["yellow"], module["extbuildcmd"],
+                COLORS["default"])
+            print os.path.abspath(os.curdir)
+            os.chdir(module["directory"])
+            os.system(module["extbuildcmd"])
+            os.chdir("..")
+            continue
+
         # Create module build directory
         moduleBuildDirectory = os.path.join(acBuildDirectory,
             module["directory"])
