@@ -345,8 +345,12 @@ if __name__ == "__main__":
             COLORS["yellow"], targetFilePath, COLORS["default"])
         allLibraryPaths = LIBRARY_PATHS + map(
             lambda n: os.path.join(acBuildDirectory,
-                MODULES[n]["directory"]), ACTIVE_MODULES)
-        allLibraries = LIBRARIES + ACTIVE_MODULES
+            MODULES[n]["directory"]), ACTIVE_MODULES)
+        activeModuleLibraries = ACTIVE_MODULES[:]
+        map(lambda n: activeModuleLibraries.remove(n),
+            filter(lambda n: activeModules[n].get("extbuildcmd") is not None,
+            activeModules.keys()))
+        allLibraries = LIBRARIES + activeModuleLibraries 
         cmd = " ".join((
             LINKER,
             " ".join(LDFLAGS),
