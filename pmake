@@ -278,6 +278,8 @@ if __name__ == "__main__":
             atLeastOneArchiveFileCreated = True
 
     # Link all object files
+    if not "APPLICATION_NAME" in vars():
+        exit(0)
     targetFilePath = os.path.join(acBuildDirectory,
         APPLICATION_NAME)
     if not os.path.exists(targetFilePath) or \
