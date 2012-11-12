@@ -33,12 +33,19 @@ class File:
 
 def scanSourceFiles(module):
     results = []
-    regex = None
+    query = None
+    sourceFiles = None
     if module.get("sourcefilter"):
-        regex = re.compile(module.get("sourcefilter"))
+        query = module["sourcefilter"].replace("?", "absf")
+    if module.get("sourcefiles"):
+        sourceFiles = module["sourcefiles"]
     for rootdir, subdirs, files in os.walk(module["directory"]):
         for f in files:
-            if regex and not regex.match(f):
+            absf = os.path.join(rootdir, f)
+            if query and not eval(query):
+                continue
+            if sourceFiles and not any(map(lambda f: f in absf,
+                    sourceFiles)):
                 continue
             el = filter(lambda e: f.endswith(e), extensions)
             if el:
