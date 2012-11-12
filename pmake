@@ -340,7 +340,7 @@ if __name__ == "__main__":
     if not os.path.exists(targetFilePath) or \
             atLeastOneArchiveFileCreated or \
             any(map(lambda a: modifyTime(targetFilePath) < modifyTime(a),
-                archiveFiles)):
+            archiveFiles)):
         print "%sLink:%s %s%s%s" % (COLORS["green"], COLORS["default"],
             COLORS["yellow"], targetFilePath, COLORS["default"])
         allLibraryPaths = LIBRARY_PATHS + map(
