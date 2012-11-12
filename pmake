@@ -33,7 +33,7 @@ class File:
     def objectFilePath(self):
         return os.path.join(self.directory, "%s.o" % self.canonical)
     def __repr__(self):
-        return "`%s`/%s .%s" % (self.directory, self.canonical,
+        return "%s/%s%s" % (self.directory, self.canonical,
             self.extension)
 
 def scanSourceFiles(module):
