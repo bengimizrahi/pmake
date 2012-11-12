@@ -36,7 +36,7 @@ class File:
         return "%s/%s%s" % (self.directory, self.canonical,
             self.extension)
 
-def scanSourceFiles(module):
+def scanSourceFiles(module, extensions):
     results = []
     query = None
     sourceFiles = None
@@ -59,6 +59,234 @@ def scanSourceFiles(module):
                     os.path.join(rootdir, f)))
     return results
 
+def moduleTarget_all(name, module):
+    # Call observer.beforeBuildingModule()
+    map(lambda o: o.beforeBuildingModule(name, module),
+        filter(lambda o: hasattr(o, "beforeBuildingModule"), observers))
+
+    # Setup default module parameters
+    if not module.get("directory"):
+        module["directory"] = name
+    if not module.get("incpaths"):
+        module["incpaths"] = []
+    if not module.get("defines"):
+        module["defines"] = []
+
+    # If extbuildcmd exists, build with the external tool
+    if module.get("extbuildcmd"):
+        print "%s%s%s" % (COLORS["yellow"], module["extbuildcmd"],
+            COLORS["default"])
+        os.chdir(module["directory"])
+        os.system(module["extbuildcmd"])
+        os.chdir(projectRootDirectory)
+        return
+
+    # Create module build directory
+    moduleBuildDirectory = os.path.join(acBuildDirectory,
+        module["directory"])
+    if not os.path.exists(moduleBuildDirectory):
+        os.makedirs(moduleBuildDirectory)
+
+    # List all source files
+    extensions = reduce(lambda a, b: a + b, COMPILER.values())
+    sourceFiles = scanSourceFiles(module, extensions)
+
+    # Compile each source file
+    def createObjectFile():
+        cmd = " ".join((
+            compiler[sourceExtension],
+            '-DBUILD_USER_NAME="%s"' % BUILD_USER["name"],
+            '-DBUILD_USER_EMAIL="%s"' % BUILD_USER["email"],
+            '-DBUILD_DATE="%s"' % now,
+            " ".join(activeConfiguration["flags"]),
+            " ".join(module["defines"]),
+            " ".join(("-I%s" % i for i in 
+                [os.path.join(
+                    module["directory"],
+                    module.get("includedir", ".")
+                )] + module["incpaths"])),
+            "-c",
+            sourceFilePath,
+            "-o",
+            objectFilePath))
+        print "%sCompile:%s %s%s%s" % (
+            COLORS["blue"], COLORS["default"],
+            COLORS["yellow"], sourceFile.filePath, COLORS["default"])
+        print "%s%s%s" % (COLORS["white"], cmd, COLORS["default"])
+        if not os.path.exists(os.path.join(acBuildDirectory, sourceDirectory)):
+            os.makedirs(os.path.join(acBuildDirectory, sourceDirectory))
+        rt = os.system(cmd)
+        if rt:
+            print "%sError:%smake.py exited with error code %d" % (
+                COLORS["red"], COLORS["default"], rt)
+            exit(rt)
+    def createDependencyFile():
+        cmd = " ".join((
+            compiler[sourceExtension],
+            "-MM",
+            " ".join(activeConfiguration["flags"]),
+            " ".join(module["defines"]),
+            " ".join(("-I%s" % i for i in 
+                [os.path.join(
+                    module["directory"],
+                    module.get("includedir", ".")
+                )] + module["incpaths"])),
+            sourceFilePath,
+            "-o",
+            dependFilePath))
+        rt = os.system(cmd)
+        if rt:
+            print "%sError:%smake.py exited with error code %d" % (
+                COLORS["red"], COLORS["default"], rt)
+            exit(rt)
+    def modifyTime(filename):
+        return os.path.getmtime(filename)
+    def anyDirtyFileInDependencyFile():
+        try:
+            with file(dependFilePath) as depend:
+                trans = string.maketrans('\\\n', '  ')
+                t1, _, t2 = (t.strip() for t in
+                    depend.read().translate(trans).strip().partition(
+                        ":"))
+                obj, deps = os.path.join(acBuildDirectory,
+                    sourceDirectory, t1), t2.split()
+                dirtyFiles = set(filter(
+                    lambda d: modifyTime(d) > modifyTime(obj), deps))
+                if dirtyFiles:
+                    print "%sDep: %s%s%s%s -> %s" % (
+                        COLORS["blue"], COLORS["default"],
+                        COLORS["yellow"], obj, COLORS["default"],
+                         ", ".join(dirtyFiles))
+                return bool(dirtyFiles)
+        except IOError:
+            print "File %s not found" % sourceFile.dependFilePath()
+            return True
+    (NO_OBJECT_FILE_FOUND,
+     DEPENDENCIES_ARE_RECENT_THAN_OBJECT_FILE,
+     OBJECT_FILE_IS_THE_MOST_RECENT) = range(3)
+    atLeastOneObjectFileCreated = False
+    for sourceFile in sourceFiles:
+        sourceFilePath = sourceFile.filePath
+        objectFilePath = os.path.join(acBuildDirectory,
+            sourceFile.objectFilePath())
+        dependFilePath = os.path.join(acBuildDirectory,
+            sourceFile.dependFilePath())
+        sourceDirectory = sourceFile.directory
+        sourceExtension = sourceFile.extension
+        if not os.path.exists(objectFilePath):
+            condition = NO_OBJECT_FILE_FOUND
+        elif anyDirtyFileInDependencyFile():
+            condition = DEPENDENCIES_ARE_RECENT_THAN_OBJECT_FILE
+        else:
+            condition = OBJECT_FILE_IS_THE_MOST_RECENT
+        if condition != OBJECT_FILE_IS_THE_MOST_RECENT:
+
+            # Call observer.beforeCompilingSource()
+            map(lambda o: o.beforeCompilingSource(name, module, sourceFile),
+                filter(lambda o: hasattr(o, "beforeCompilingSource"), observers))
+
+            createObjectFile()
+            atLeastOneObjectFileCreated = True
+            createDependencyFile()
+
+            # Call observer.afterCompilingSource()
+            map(lambda o: o.afterCompilingSource(name, module, sourceFile),
+                filter(lambda o: hasattr(o, "afterCompilingSource"), observers))
+
+    # Call observer.beforeArchiving()
+    map(lambda o: o.beforeArchiving(name, module),
+        filter(lambda o: hasattr(o, "beforeArchiving"), observers))
+
+    # Create library for the module
+    moduleObjectFiles = map(lambda s: os.path.join(acBuildDirectory, s.objectFilePath()),
+        sourceFiles)
+    libFilePath = os.path.join(acBuildDirectory,
+        MODULES[name]["directory"],
+        "lib%s.a" % name)
+    archiveFiles.append(libFilePath)
+    if not os.path.exists(libFilePath) or any(
+            map(lambda o: modifyTime(libFilePath) < modifyTime(o),
+                moduleObjectFiles)):
+        print "%sArchive:%s %s%s%s" % (
+            COLORS["magenda"], COLORS["default"],
+            COLORS["yellow"], libFilePath, COLORS["default"])
+        objects = " ".join(moduleObjectFiles)
+        cmd = " ".join((
+            AR,
+            "cr",
+            libFilePath,
+            objects
+        ))
+        print "%s%s%s" % (COLORS["white"], cmd, COLORS["default"])
+        rt = os.system(cmd)
+        if rt:
+            print "%sError:make.py exited with error code %d%s" % (
+                COLORS["red"], rt, COLORS["default"])
+            exit(rt)
+        atLeastOneArchiveFileCreated = True
+
+    # Call observer.afterBuildingModule()
+    map(lambda o: o.afterBuildingModule(name, module),
+        filter(lambda o: hasattr(o, "afterBuildingModule"), observers))
+
+def moduleTarget_clean(name, module):
+    print "%sClean %s/%s%s" % (COLORS["blue"], acBuildDirectory,
+        name, COLORS["default"])
+    if module.get("extcleancmd"):
+        if module.get("directory"):
+            os.chdir(module["directory"])
+        else:
+            os.chdir(name)
+        os.system(module["extcleancmd"])
+        os.chdir(projectRootDirectory)
+
+def appTarget_all():
+    if not "APPLICATION_NAME" in globals():
+        exit(0)
+    targetFilePath = os.path.join(acBuildDirectory,
+        APPLICATION_NAME)
+    if not os.path.exists(targetFilePath) or \
+            atLeastOneArchiveFileCreated or \
+            any(map(lambda a: modifyTime(targetFilePath) < modifyTime(a),
+            archiveFiles)):
+        print "%sLink:%s %s%s%s" % (COLORS["green"], COLORS["default"],
+            COLORS["yellow"], targetFilePath, COLORS["default"])
+        allLibraryPaths = LIBRARY_PATHS + map(
+            lambda n: os.path.join(acBuildDirectory,
+            MODULES[n]["directory"]), ACTIVE_MODULES)
+        activeModuleLibraries = ACTIVE_MODULES[:]
+        map(lambda n: activeModuleLibraries.remove(n),
+            filter(lambda n: activeModules[n].get("extbuildcmd") is not None,
+            activeModules.keys()))
+        allLibraries = LIBRARIES + activeModuleLibraries 
+        cmd = " ".join((
+            LINKER,
+            " ".join(LDFLAGS),
+            " ".join(("-L%s" % d for d in allLibraryPaths)),
+            " ".join(("-l%s" % l for l in allLibraries)),
+            "-o",
+            targetFilePath
+        ))
+        print "%s%s%s" % (COLORS["white"], cmd, COLORS["default"])
+        rt = os.system(cmd)
+        if rt:
+            print "%sError:%smake.py exited with error code %d" % (
+                COLORS["red"], COLORS["default"], rt)
+            exit(rt)
+        shutil.copy(targetFilePath, APPLICATION_NAME)
+
+    # Call observer.afterBuilding()
+    map(lambda o: o.afterBuilding(),
+        filter(lambda o: hasattr(o, "afterBuilding"), observers))
+
+def appTarget_clean():
+    print "%sClean %s/%s" % (COLORS["blue"], acBuildDirectory,
+        COLORS["default"])
+    try:
+        shutil.rmtree(acBuildDirectory)
+    except OSError, e:
+        print e
+        pass
 
 if __name__ == "__main__":
 
@@ -128,245 +356,31 @@ if __name__ == "__main__":
     activeModules = dict(filter(lambda m: m[0] in ACTIVE_MODULES,
         MODULES.iteritems()))
 
-    # Clean the active configuration build sub directory
-    # if target == "clean"
-    if target == "clean":
-        print "%sClean %s%s" % (COLORS["blue"],
-            acBuildDirectory, COLORS["default"])
-        try:
-            shutil.rmtree(acBuildDirectory)
-        except OSError, e:
-            print e
-            pass
-        for name, module in activeModules.iteritems():
-            if module.get("cleancmd"):
-                system("cd %s" % module["directory"])
-                system(module["cleancmd"])
-                system("cd -") 
-        exit(0)
-
     # Get Observer subclasses
     observers = map(lambda oc: oc(),
         filter(lambda oc: inspect.isclass(oc) and
-        issubclass(oc, Observer), locals().values()))
+        issubclass(oc, Observer), globals().values()))
 
     # Call observer.beforeBuilding()
     map(lambda o: o.beforeBuilding(),
         filter(lambda o: hasattr(o, "beforeBuilding"), observers))
 
-    # Build each active module
+    # Setup moduleTarget & appTarget functions
+    moduleTarget = globals().get("moduleTarget_" + target)
+    appTarget = globals().get("appTarget_" + target)
+    if not appTarget or not moduleTarget:
+        print "Error: Unknown target '%s'" % target
+        exit(1)
+
+    # Apply target to each active module
     archiveFiles = list()
     atLeastOneArchiveFileCreated = False
     for name, module in activeModules.iteritems():
-
-        # Call observer.beforeBuildingModule()
-        map(lambda o: o.beforeBuildingModule(name, module),
-            filter(lambda o: hasattr(o, "beforeBuildingModule"), observers))
-
-        # Setup default module parameters
-        if not module.get("directory"):
-            module["directory"] = name
-        if not module.get("incpaths"):
-            module["incpaths"] = []
-        if not module.get("defines"):
-            module["defines"] = []
-
-        # If extbuildcmd exists, build with the external tool
-        if module.get("extbuildcmd"):
-            print "%s%s%s" % (COLORS["yellow"], module["extbuildcmd"],
-                COLORS["default"])
-            os.chdir(module["directory"])
-            os.system(module["extbuildcmd"])
-            os.chdir(projectRootDirectory)
-            continue
-
-        # Create module build directory
-        moduleBuildDirectory = os.path.join(acBuildDirectory,
-            module["directory"])
-        if not os.path.exists(moduleBuildDirectory):
-            os.makedirs(moduleBuildDirectory)
-
-        # List all source files
-        extensions = reduce(lambda a, b: a + b, COMPILER.values())
-        sourceFiles = scanSourceFiles(module)
-
-        # Compile each source file
-        def createObjectFile():
-            cmd = " ".join((
-                compiler[sourceExtension],
-                '-DBUILD_USER_NAME="%s"' % BUILD_USER["name"],
-                '-DBUILD_USER_EMAIL="%s"' % BUILD_USER["email"],
-                '-DBUILD_DATE="%s"' % now,
-                " ".join(activeConfiguration["flags"]),
-                " ".join(module["defines"]),
-                " ".join(("-I%s" % i for i in 
-                    [os.path.join(
-                        module["directory"],
-                        module.get("includedir", ".")
-                    )] + module["incpaths"])),
-                "-c",
-                sourceFilePath,
-                "-o",
-                objectFilePath))
-            print "%sCompile:%s %s%s%s" % (
-                COLORS["blue"], COLORS["default"],
-                COLORS["yellow"], sourceFile.filePath, COLORS["default"])
-            print "%s%s%s" % (COLORS["white"], cmd, COLORS["default"])
-            if not os.path.exists(os.path.join(acBuildDirectory, sourceDirectory)):
-                os.makedirs(os.path.join(acBuildDirectory, sourceDirectory))
-            rt = os.system(cmd)
-            if rt:
-                print "%sError:%smake.py exited with error code %d" % (
-                    COLORS["red"], COLORS["default"], rt)
-                exit(rt)
-        def createDependencyFile():
-            cmd = " ".join((
-                compiler[sourceExtension],
-                "-MM",
-                " ".join(activeConfiguration["flags"]),
-                " ".join(module["defines"]),
-                " ".join(("-I%s" % i for i in 
-                    [os.path.join(
-                        module["directory"],
-                        module.get("includedir", ".")
-                    )] + module["incpaths"])),
-                sourceFilePath,
-                "-o",
-                dependFilePath))
-            rt = os.system(cmd)
-            if rt:
-                print "%sError:%smake.py exited with error code %d" % (
-                    COLORS["red"], COLORS["default"], rt)
-                exit(rt)
-        def modifyTime(filename):
-            return os.path.getmtime(filename)
-        def anyDirtyFileInDependencyFile():
-            try:
-                with file(dependFilePath) as depend:
-                    trans = string.maketrans('\\\n', '  ')
-                    t1, _, t2 = (t.strip() for t in
-                        depend.read().translate(trans).strip().partition(
-                            ":"))
-                    obj, deps = os.path.join(acBuildDirectory,
-                        sourceDirectory, t1), t2.split()
-                    dirtyFiles = set(filter(
-                        lambda d: modifyTime(d) > modifyTime(obj), deps))
-                    if dirtyFiles:
-                        print "%sDep: %s%s%s%s -> %s" % (
-                            COLORS["blue"], COLORS["default"],
-                            COLORS["yellow"], obj, COLORS["default"],
-                             ", ".join(dirtyFiles))
-                    return bool(dirtyFiles)
-            except IOError:
-                print "File %s not found" % sourceFile.dependFilePath()
-                return True
-        (NO_OBJECT_FILE_FOUND,
-         DEPENDENCIES_ARE_RECENT_THAN_OBJECT_FILE,
-         OBJECT_FILE_IS_THE_MOST_RECENT) = range(3)
-        atLeastOneObjectFileCreated = False
-        for sourceFile in sourceFiles:
-            sourceFilePath = sourceFile.filePath
-            objectFilePath = os.path.join(acBuildDirectory,
-                sourceFile.objectFilePath())
-            dependFilePath = os.path.join(acBuildDirectory,
-                sourceFile.dependFilePath())
-            sourceDirectory = sourceFile.directory
-            sourceExtension = sourceFile.extension
-            if not os.path.exists(objectFilePath):
-                condition = NO_OBJECT_FILE_FOUND
-            elif anyDirtyFileInDependencyFile():
-                condition = DEPENDENCIES_ARE_RECENT_THAN_OBJECT_FILE
-            else:
-                condition = OBJECT_FILE_IS_THE_MOST_RECENT
-            if condition != OBJECT_FILE_IS_THE_MOST_RECENT:
-
-                # Call observer.beforeCompilingSource()
-                map(lambda o: o.beforeCompilingSource(name, module, sourceFile),
-                    filter(lambda o: hasattr(o, "beforeCompilingSource"), observers))
-
-                createObjectFile()
-                atLeastOneObjectFileCreated = True
-                createDependencyFile()
-
-                # Call observer.afterCompilingSource()
-                map(lambda o: o.afterCompilingSource(name, module, sourceFile),
-                    filter(lambda o: hasattr(o, "afterCompilingSource"), observers))
-
-        # Call observer.beforeArchiving()
-        map(lambda o: o.beforeArchiving(name, module),
-            filter(lambda o: hasattr(o, "beforeArchiving"), observers))
-
-        # Create library for the module
-        moduleObjectFiles = map(lambda s: os.path.join(acBuildDirectory, s.objectFilePath()),
-            sourceFiles)
-        libFilePath = os.path.join(acBuildDirectory,
-            MODULES[name]["directory"],
-            "lib%s.a" % name)
-        archiveFiles.append(libFilePath)
-        if not os.path.exists(libFilePath) or any(
-                map(lambda o: modifyTime(libFilePath) < modifyTime(o),
-                    moduleObjectFiles)):
-            print "%sArchive:%s %s%s%s" % (
-                COLORS["magenda"], COLORS["default"],
-                COLORS["yellow"], libFilePath, COLORS["default"])
-            objects = " ".join(moduleObjectFiles)
-            cmd = " ".join((
-                AR,
-                "cr",
-                libFilePath,
-                objects
-            ))
-            print "%s%s%s" % (COLORS["white"], cmd, COLORS["default"])
-            rt = os.system(cmd)
-            if rt:
-                print "%sError:make.py exited with error code %d%s" % (
-                    COLORS["red"], rt, COLORS["default"])
-                exit(rt)
-            atLeastOneArchiveFileCreated = True
-
-        # Call observer.afterBuildingModule()
-        map(lambda o: o.afterBuildingModule(name, module),
-            filter(lambda o: hasattr(o, "afterBuildingModule"), observers))
+        moduleTarget(name, module)
 
     # Call observer.beforeLinking()
     map(lambda o: o.beforeLinking(),
         filter(lambda o: hasattr(o, "beforeLinking"), observers))
 
     # Link all object files
-    if not "APPLICATION_NAME" in vars():
-        exit(0)
-    targetFilePath = os.path.join(acBuildDirectory,
-        APPLICATION_NAME)
-    if not os.path.exists(targetFilePath) or \
-            atLeastOneArchiveFileCreated or \
-            any(map(lambda a: modifyTime(targetFilePath) < modifyTime(a),
-            archiveFiles)):
-        print "%sLink:%s %s%s%s" % (COLORS["green"], COLORS["default"],
-            COLORS["yellow"], targetFilePath, COLORS["default"])
-        allLibraryPaths = LIBRARY_PATHS + map(
-            lambda n: os.path.join(acBuildDirectory,
-            MODULES[n]["directory"]), ACTIVE_MODULES)
-        activeModuleLibraries = ACTIVE_MODULES[:]
-        map(lambda n: activeModuleLibraries.remove(n),
-            filter(lambda n: activeModules[n].get("extbuildcmd") is not None,
-            activeModules.keys()))
-        allLibraries = LIBRARIES + activeModuleLibraries 
-        cmd = " ".join((
-            LINKER,
-            " ".join(LDFLAGS),
-            " ".join(("-L%s" % d for d in allLibraryPaths)),
-            " ".join(("-l%s" % l for l in allLibraries)),
-            "-o",
-            targetFilePath
-        ))
-        print "%s%s%s" % (COLORS["white"], cmd, COLORS["default"])
-        rt = os.system(cmd)
-        if rt:
-            print "%sError:%smake.py exited with error code %d" % (
-                COLORS["red"], COLORS["default"], rt)
-            exit(rt)
-        shutil.copy(targetFilePath, APPLICATION_NAME)
-
-    # Call observer.afterBuilding()
-    map(lambda o: o.afterBuilding(),
-        filter(lambda o: hasattr(o, "afterBuilding"), observers))
+    appTarget()
