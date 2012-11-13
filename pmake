@@ -19,6 +19,7 @@ COLORS = { "blue": "\033[1;34m", "default": "\x1B[m", "yellow": "\033[1;33m",
 NOCOLORS = dict(map(lambda c: (c, ""), COLORS.iterkeys()))
 
 class Observer(object):
+    enabled = True
     def onEvent(self, target, event, *args, **kwargs):
         assert False, "%s.onEvent() is not implemented." % (
             self.__class__.__name__)
@@ -362,8 +363,8 @@ if __name__ == "__main__":
         MODULES.iteritems()))
 
     # Get Observer subclasses
-    allObservers = filter(lambda oc: inspect.isclass(oc)
-        and issubclass(oc, Observer), globals().values())
+    allObservers = filter(lambda oc: inspect.isclass(oc) and
+        issubclass(oc, Observer) and oc.enabled, globals().values())
     validObservers = allObservers.remove(Observer)
     observers = map(lambda oc: oc(), allObservers)
 
