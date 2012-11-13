@@ -88,7 +88,7 @@ def createObjectFile(sourceFile, objectFilePath):
         os.makedirs(os.path.join(acBuildDirectory, sourceFile.directory))
     rt = os.system(cmd)
     if rt:
-        print "%sError:%smake.py exited with error code %d" % (
+        print "%sError:%spmake exited with error code %d" % (
             COLORS["red"], COLORS["default"], rt)
         notifyObservers(target, "didFinish", error=True)
         exit(rt)
@@ -109,7 +109,7 @@ def createDependencyFile(sourceFile, dependFilePath):
         dependFilePath))
     rt = os.system(cmd)
     if rt:
-        print "%sError:%smake.py exited with error code %d" % (
+        print "%sError:%spmake exited with error code %d" % (
             COLORS["red"], COLORS["default"], rt)
         notifyObservers(target, "didFinish", error=True)
         exit(rt)
@@ -225,7 +225,7 @@ def moduleTarget_all(name, module):
         print "%s%s%s" % (COLORS["white"], cmd, COLORS["default"])
         rt = os.system(cmd)
         if rt:
-            print "%sError:make.py exited with error code %d%s" % (
+            print "%sError:pmake exited with error code %d%s" % (
                 COLORS["red"], rt, COLORS["default"])
             notifyObservers(target, "didFinish", error=True)
             exit(rt)
@@ -277,7 +277,7 @@ def appTarget_all():
         print "%s%s%s" % (COLORS["white"], cmd, COLORS["default"])
         rt = os.system(cmd)
         if rt:
-            print "%sError:%smake.py exited with error code %d" % (
+            print "%sError:%spmake exited with error code %d" % (
                 COLORS["red"], COLORS["default"], rt)
             notifyObservers(target, "didFinish", error=True)
             exit(rt)
