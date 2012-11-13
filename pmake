@@ -167,7 +167,7 @@ def moduleTarget_all(name, module):
         print "%s%s%s" % (COLORS["yellow"], module["extbuildcmd"],
             COLORS["default"])
         os.chdir(module["directory"])
-        rt = runShellCommand([module["extbuildcmd"]])
+        rt = runShellCommand(module["extbuildcmd"].split())
         if rt:
             print "%sError:%spmake exited with error code %d" % (
                 COLORS["red"], COLORS["default"], rt)
@@ -254,7 +254,7 @@ def moduleTarget_clean(name, module):
             os.chdir(module["directory"])
         else:
             os.chdir(name)
-        runShellCommand([module["extcleancmd"]])
+        runShellCommand(module["extcleancmd"].split())
         os.chdir(projectRootDirectory)
     notifyObservers(target, "didCleanModule", name, module)
 
