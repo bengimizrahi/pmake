@@ -67,9 +67,6 @@ def scanSourceFiles(module, extensions):
 def createObjectFile(sourceFile, objectFilePath):
     cmd = " ".join((
         compiler[sourceFile.extension],
-        '-DBUILD_USER_NAME="%s"' % BUILD_USER["name"],
-        '-DBUILD_USER_EMAIL="%s"' % BUILD_USER["email"],
-        '-DBUILD_DATE="%s"' % now,
         " ".join(activeConfiguration["flags"]),
         " ".join(module["defines"]),
         " ".join(("-I%s" % i for i in 
