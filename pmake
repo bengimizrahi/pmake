@@ -34,17 +34,22 @@ def runShellCommand(cmd, **kwargs):
         print "%s%s%s" % (COLORS["white"], " ".join(cmd), COLORS["default"])
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
     eof = {p.stdout: False, p.stderr: False}
-    while not all(eof.values()):
-        for fd in select.select([p.stdout, p.stderr], [], [])[0]:
-            line = fd.readline().strip()
-            if not line:
-                eof[fd] = True
-                continue
-            if line.startswith("Warning:"):
-                print "%s%s%s" % (COLORS["yellow"], line, COLORS["default"])
-            if line.startswith("Error:"):
-                print "%s%s%s" % (COLORS["red"], line, COLORS["default"])
-            print line
+    try:
+        while not all(eof.values()):
+            for fd in select.select([p.stdout, p.stderr], [], [])[0]:
+                line = fd.readline().strip()
+                if not line:
+                    eof[fd] = True
+                    continue
+                if ": warning: " in line:
+                    print "%s%s%s" % (COLORS["yellow"], line, COLORS["default"])
+                elif ": error: " in line:
+                    print "%s%s%s" % (COLORS["red"], line, COLORS["default"])
+                else:
+                    print line
+    except KeyboardInterrupt:
+        print
+        exit(1)
     p.communicate()
     return p.returncode
 
