@@ -64,6 +64,81 @@ def scanSourceFiles(module, extensions):
                     os.path.join(rootdir, f)))
     return results
 
+def createObjectFile(sourceFile, objectFilePath):
+    cmd = " ".join((
+        compiler[sourceFile.extension],
+        '-DBUILD_USER_NAME="%s"' % BUILD_USER["name"],
+        '-DBUILD_USER_EMAIL="%s"' % BUILD_USER["email"],
+        '-DBUILD_DATE="%s"' % now,
+        " ".join(activeConfiguration["flags"]),
+        " ".join(module["defines"]),
+        " ".join(("-I%s" % i for i in 
+            [os.path.join(
+                module["directory"],
+                module.get("includedir", ".")
+            )] + module["incpaths"])),
+        "-c",
+        sourceFile.filePath,
+        "-o",
+        objectFilePath))
+    print "%sCompile:%s %s%s%s" % (
+        COLORS["blue"], COLORS["default"],
+        COLORS["yellow"], sourceFile.filePath, COLORS["default"])
+    print "%s%s%s" % (COLORS["white"], cmd, COLORS["default"])
+    if not os.path.exists(os.path.join(acBuildDirectory, sourceFile.directory)):
+        os.makedirs(os.path.join(acBuildDirectory, sourceFile.directory))
+    rt = os.system(cmd)
+    if rt:
+        print "%sError:%smake.py exited with error code %d" % (
+            COLORS["red"], COLORS["default"], rt)
+        notifyObservers(target, "didFinish", error=True)
+        exit(rt)
+
+def createDependencyFile(sourceFile, dependFilePath):
+    cmd = " ".join((
+        compiler[sourceFile.extension],
+        "-MM",
+        " ".join(activeConfiguration["flags"]),
+        " ".join(module["defines"]),
+        " ".join(("-I%s" % i for i in 
+            [os.path.join(
+                module["directory"],
+                module.get("includedir", ".")
+            )] + module["incpaths"])),
+        sourceFile.filePath,
+        "-o",
+        dependFilePath))
+    rt = os.system(cmd)
+    if rt:
+        print "%sError:%smake.py exited with error code %d" % (
+            COLORS["red"], COLORS["default"], rt)
+        notifyObservers(target, "didFinish", error=True)
+        exit(rt)
+
+def modifyTime(filename):
+    return os.path.getmtime(filename)
+
+def anyDirtyFileInDependencyFile(sourceFile, dependFilePath):
+    try:
+        with file(dependFilePath) as depend:
+            trans = string.maketrans('\\\n', '  ')
+            t1, _, t2 = (t.strip() for t in
+                depend.read().translate(trans).strip().partition(
+                    ":"))
+            obj, deps = os.path.join(acBuildDirectory,
+                sourceFile.directory, t1), t2.split()
+            dirtyFiles = set(filter(
+                lambda d: modifyTime(d) > modifyTime(obj), deps))
+            if dirtyFiles:
+                print "%sDep: %s%s%s%s -> %s" % (
+                    COLORS["blue"], COLORS["default"],
+                    COLORS["yellow"], obj, COLORS["default"],
+                     ", ".join(dirtyFiles))
+            return bool(dirtyFiles)
+    except IOError:
+        print "File %s not found" % sourceFile.dependFilePath()
+        return True
+
 def moduleTarget_all(name, module):
     notifyObservers(target, "willBuildModule", name, module)
 
@@ -95,77 +170,6 @@ def moduleTarget_all(name, module):
     sourceFiles = scanSourceFiles(module, extensions)
 
     # Compile each source file
-    def createObjectFile():
-        cmd = " ".join((
-            compiler[sourceExtension],
-            '-DBUILD_USER_NAME="%s"' % BUILD_USER["name"],
-            '-DBUILD_USER_EMAIL="%s"' % BUILD_USER["email"],
-            '-DBUILD_DATE="%s"' % now,
-            " ".join(activeConfiguration["flags"]),
-            " ".join(module["defines"]),
-            " ".join(("-I%s" % i for i in 
-                [os.path.join(
-                    module["directory"],
-                    module.get("includedir", ".")
-                )] + module["incpaths"])),
-            "-c",
-            sourceFilePath,
-            "-o",
-            objectFilePath))
-        print "%sCompile:%s %s%s%s" % (
-            COLORS["blue"], COLORS["default"],
-            COLORS["yellow"], sourceFile.filePath, COLORS["default"])
-        print "%s%s%s" % (COLORS["white"], cmd, COLORS["default"])
-        if not os.path.exists(os.path.join(acBuildDirectory, sourceDirectory)):
-            os.makedirs(os.path.join(acBuildDirectory, sourceDirectory))
-        rt = os.system(cmd)
-        if rt:
-            print "%sError:%smake.py exited with error code %d" % (
-                COLORS["red"], COLORS["default"], rt)
-            notifyObservers(target, "didFinish", error=True)
-            exit(rt)
-    def createDependencyFile():
-        cmd = " ".join((
-            compiler[sourceExtension],
-            "-MM",
-            " ".join(activeConfiguration["flags"]),
-            " ".join(module["defines"]),
-            " ".join(("-I%s" % i for i in 
-                [os.path.join(
-                    module["directory"],
-                    module.get("includedir", ".")
-                )] + module["incpaths"])),
-            sourceFilePath,
-            "-o",
-            dependFilePath))
-        rt = os.system(cmd)
-        if rt:
-            print "%sError:%smake.py exited with error code %d" % (
-                COLORS["red"], COLORS["default"], rt)
-            notifyObservers(target, "didFinish", error=True)
-            exit(rt)
-    def modifyTime(filename):
-        return os.path.getmtime(filename)
-    def anyDirtyFileInDependencyFile():
-        try:
-            with file(dependFilePath) as depend:
-                trans = string.maketrans('\\\n', '  ')
-                t1, _, t2 = (t.strip() for t in
-                    depend.read().translate(trans).strip().partition(
-                        ":"))
-                obj, deps = os.path.join(acBuildDirectory,
-                    sourceDirectory, t1), t2.split()
-                dirtyFiles = set(filter(
-                    lambda d: modifyTime(d) > modifyTime(obj), deps))
-                if dirtyFiles:
-                    print "%sDep: %s%s%s%s -> %s" % (
-                        COLORS["blue"], COLORS["default"],
-                        COLORS["yellow"], obj, COLORS["default"],
-                         ", ".join(dirtyFiles))
-                return bool(dirtyFiles)
-        except IOError:
-            print "File %s not found" % sourceFile.dependFilePath()
-            return True
     (NO_OBJECT_FILE_FOUND,
      DEPENDENCIES_ARE_RECENT_THAN_OBJECT_FILE,
      OBJECT_FILE_IS_THE_MOST_RECENT) = range(3)
@@ -180,7 +184,7 @@ def moduleTarget_all(name, module):
         sourceExtension = sourceFile.extension
         if not os.path.exists(objectFilePath):
             condition = NO_OBJECT_FILE_FOUND
-        elif anyDirtyFileInDependencyFile():
+        elif anyDirtyFileInDependencyFile(sourceFile, dependFilePath):
             condition = DEPENDENCIES_ARE_RECENT_THAN_OBJECT_FILE
         else:
             condition = OBJECT_FILE_IS_THE_MOST_RECENT
@@ -189,9 +193,9 @@ def moduleTarget_all(name, module):
             notifyObservers(target, "willCompileSourceFile",
                 name, module, sourceFile)
 
-            createObjectFile()
+            createObjectFile(sourceFile, objectFilePath)
             atLeastOneObjectFileCreated = True
-            createDependencyFile()
+            createDependencyFile(sourceFile, dependFilePath)
 
             notifyObservers(target, "didCompileSourceFile",
                 name, module, sourceFile)
