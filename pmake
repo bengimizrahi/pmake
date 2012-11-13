@@ -27,16 +27,20 @@ def notifyObservers(target, event, *args, **kwargs):
     map(lambda o: o.onEvent(target, event, *args, **kwargs), observers)
 
 class File:
-    def __init__(self, filename, directory, extension, filePath):
-        self.filename = filename
-        self.canonical = os.path.splitext(filename)[0]
-        self.directory = directory
-        self.extension = extension
-        self.filePath = filePath
+    def __init__(self, filePath):
+        self.basename = os.path.basename(filePath)
+        self.canonical, self.extension = os.path.splitext(self.basename)
+        self.directory = os.path.dirname(filePath)
+    @property
     def dependFilePath(self):
         return os.path.join(self.directory, "%s.d" % self.canonical)
+    @property
     def objectFilePath(self):
         return os.path.join(self.directory, "%s.o" % self.canonical)
+    @property
+    def sourceFilePath(self):
+        return os.path.join(self.directory, "%s%s" % (
+            self.canonical, self.extension))
     def __repr__(self):
         return "%s/%s%s" % (self.directory, self.canonical,
             self.extension)
@@ -57,11 +61,8 @@ def scanSourceFiles(module, extensions):
             if sourceFiles and not any(map(lambda f: f in absf,
                     sourceFiles)):
                 continue
-            el = filter(lambda e: f.endswith(e), extensions)
-            if el:
-                ext = el.pop()
-                results.append(File(f, rootdir, ext,
-                    os.path.join(rootdir, f)))
+            if os.path.splitext(f)[-1] in extensions:
+                results.append(File(absf))
     return results
 
 def createObjectFile(sourceFile, objectFilePath):
@@ -75,12 +76,12 @@ def createObjectFile(sourceFile, objectFilePath):
                 module.get("includedir", ".")
             )] + module["incpaths"])),
         "-c",
-        sourceFile.filePath,
+        sourceFile.sourceFilePath,
         "-o",
         objectFilePath))
     print "%sCompile:%s %s%s%s" % (
         COLORS["blue"], COLORS["default"],
-        COLORS["yellow"], sourceFile.filePath, COLORS["default"])
+        COLORS["yellow"], sourceFile.sourceFilePath, COLORS["default"])
     print "%s%s%s" % (COLORS["white"], cmd, COLORS["default"])
     if not os.path.exists(os.path.join(acBuildDirectory, sourceFile.directory)):
         os.makedirs(os.path.join(acBuildDirectory, sourceFile.directory))
@@ -102,7 +103,7 @@ def createDependencyFile(sourceFile, dependFilePath):
                 module["directory"],
                 module.get("includedir", ".")
             )] + module["incpaths"])),
-        sourceFile.filePath,
+        sourceFile.sourceFilePath,
         "-o",
         dependFilePath))
     rt = os.system(cmd)
@@ -133,7 +134,7 @@ def anyDirtyFileInDependencyFile(sourceFile, dependFilePath):
                      ", ".join(dirtyFiles))
             return bool(dirtyFiles)
     except IOError:
-        print "File %s not found" % sourceFile.dependFilePath()
+        print "File %s not found" % sourceFile.dependFilePath
         return True
 
 def moduleTarget_all(name, module):
@@ -172,11 +173,11 @@ def moduleTarget_all(name, module):
      OBJECT_FILE_IS_THE_MOST_RECENT) = range(3)
     atLeastOneObjectFileCreated = False
     for sourceFile in sourceFiles:
-        sourceFilePath = sourceFile.filePath
+        sourceFilePath = sourceFile.sourceFilePath
         objectFilePath = os.path.join(acBuildDirectory,
-            sourceFile.objectFilePath())
+            sourceFile.objectFilePath)
         dependFilePath = os.path.join(acBuildDirectory,
-            sourceFile.dependFilePath())
+            sourceFile.dependFilePath)
         sourceDirectory = sourceFile.directory
         sourceExtension = sourceFile.extension
         if not os.path.exists(objectFilePath):
@@ -201,8 +202,8 @@ def moduleTarget_all(name, module):
         name, module)
 
     # Create library for the module
-    moduleObjectFiles = map(lambda s: os.path.join(acBuildDirectory, s.objectFilePath()),
-        sourceFiles)
+    moduleObjectFiles = map(lambda s: os.path.join(
+        acBuildDirectory, s.objectFilePath), sourceFiles)
     libFilePath = os.path.join(acBuildDirectory,
         MODULES[name]["directory"],
         "lib%s.a" % name)
