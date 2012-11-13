@@ -247,7 +247,7 @@ def moduleTarget_clean(name, module):
 
 def appTarget_all():
     if not "APPLICATION_NAME" in globals():
-        notifyObservers(target, "didFinish", error=False)
+        notifyObservers(target, "willLink", error=False)
         exit(0)
     targetFilePath = os.path.join(acBuildDirectory,
         APPLICATION_NAME)
