@@ -282,7 +282,7 @@ def appTarget_all():
             exit(rt)
         shutil.copy(targetFilePath, APPLICATION_NAME)
 
-    notifyObservers(target, "didFinish", successful=True)
+    notifyObservers(target, "didFinish", error=False)
 
 def appTarget_clean():
     print "%sClean %s/%s" % (COLORS["blue"], acBuildDirectory,
