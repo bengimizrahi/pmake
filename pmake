@@ -96,7 +96,7 @@ def createObjectFile(sourceFile, objectFilePath):
     cmd = [compiler[sourceFile.extension]]
     cmd.extend(activeConfiguration["flags"])
     cmd.extend(module["defines"])
-    cmd.extend(["-I%s" % i for i in 
+    cmd.extend(["-I."] + ["-I%s" % i for i in 
             [os.path.join(
                 module["directory"],
                 module.get("includedir", ".")
