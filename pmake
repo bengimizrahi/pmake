@@ -43,7 +43,7 @@ def runShellCommand(cmd, **kwargs):
                     continue
                 if ": warning: " in line:
                     print "%s%s%s" % (COLORS["yellow"], line, COLORS["default"])
-                elif ": error: " in line:
+                elif ": error: " in line or ": fatal error:" in line:
                     print "%s%s%s" % (COLORS["red"], line, COLORS["default"])
                 else:
                     print line
