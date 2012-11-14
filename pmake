@@ -153,7 +153,7 @@ def anyDirtyFileInDependencyFile(sourceFile, dependFilePath):
                      ", ".join(dirtyFiles))
             return bool(dirtyFiles)
     except IOError:
-        print "File %s not found" % sourceFile.dependFilePath
+        print "File %s not found" % dependFilePath
         return True
 
 def moduleTarget_all(name, module):
