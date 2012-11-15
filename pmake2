@@ -3,8 +3,9 @@
 def rule(targets, prerequisites=None, **kwargs):
     assert type(targets) in [str, list],
         "'targets' can only be a 'str' or 'list' object."
-    assert type(prerequisites) in [None, str, list]
-        "'targets' can only be a 'str', 'list' object or 'None'."
+    assert type(prerequisites) in [None, str] or \
+            callable(prerequisites):
+        "'prerequisites' can only be a 'None', 'str' or a callable."
     def ruleDecorator(recipeFunc):
         def decoratedRecipeFunc:
             # TODO: Do it! :)
@@ -12,39 +13,42 @@ def rule(targets, prerequisites=None, **kwargs):
     return ruleDecorator
 
 
+APPLICATION_NAME = "fap"
+BUILD_DIR = "Build"
+
 # Rules for building
 
-@rule("all", "%(APPLICATION_BINARY)"):
-def makeAll():
+@rule("all", APPLICATION_NAME):
+def makeAll(target):
     pass
 
-@rule("%(APPLICATION_BINARY)", "%(MODULE)"):
-def makeApp():
+@rule(APPLICATION_NAME, MODULES.keys()):
+def makeApp(target):
     pass
 
-@rule("%(MODULE)", "%(BUILD_DIR)/%(MODULE)/%(OBJECT)"):
-def makeModule():
+@rule(MODULES.keys(), getObjectsByModule):
+def makeModule(target):
     pass
 
-@rule("%(BUILD_DIR)/%(MODULE)/%(OBJECT)", "%(MODULE)/%(SOURCE)"):
-def makeObject():
+@rule(getAllObjects(), getSourceByObject):
+def makeObject(target):
     pass
 
-@rule("%(MODULE)/%(SOURCE)"):
-def makeCompile():
+@rule(getAllSources()):
+def makeCompile(target):
     pass
 
 
 # Rules for cleaning
 
-@rule("clean", "clean_%(APPLICATION_NAME)"):
-def makeClean():
+@rule("clean", "clean_" + APPLICATION_NAME):
+def makeClean(target):
     pass
 
-@rule("clean_%(APPLICATION_NAME)", "clean_%(MODULE)"):
-def makeCleanApp():
+@rule("clean_" + APPLICATION_NAME, ["clean_" + m for m in MODULE.keys()]):
+def makeCleanApp(target):
     pass
 
-@rule("clean_%(MODULE)"):
-def makeCleanModule():
+@rule(["clean_" + m for m in MODULE.keys()]):
+def makeCleanModule(target):
     pass
