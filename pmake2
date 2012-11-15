@@ -1,5 +1,23 @@
 #!/usr/bin/python
 
+rules = {}
+
+class Rule(object)
+    def __init__(self, target, prerequisites, recipe):
+        self.target = target
+        if type(prerequisites) == str:
+            self.prerequisites = [prerequisites]
+        elif type(prerequisites) == list:
+            self.prerequisites = prerequisites
+        elif callable(prerequisites):
+            self.prerequisites = prerequisites(target)
+        self.recipe = recipe
+    def __repr__(self):
+        return "Rule(%s -> %s (%s))" % (self.target, self.prerequisites,
+            self.recipe.__name__)
+    def do(self):
+        return False
+
 def rule(targets, prerequisites=None, **kwargs):
     assert type(targets) in [str, list],
         "'targets' can only be a 'str' or 'list' object."
@@ -7,9 +25,11 @@ def rule(targets, prerequisites=None, **kwargs):
             callable(prerequisites):
         "'prerequisites' can only be a 'None', 'str' or a callable."
     def ruleDecorator(recipeFunc):
-        def decoratedRecipeFunc:
-            # TODO: Do it! :)
-        return decoratedRecipeFunc
+        if type(targets) == str: targets = [targets] 
+        for t in targets:
+            r = Rule(t, prerequisites, recipe)
+            rules[t] = r
+        return lambda target: None
     return ruleDecorator
 
 
