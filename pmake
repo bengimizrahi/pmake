@@ -18,7 +18,7 @@ COLORS = { "blue": "\033[1;34m", "default": "\x1B[m", "yellow": "\033[1;33m",
     "magenda": "\033[1;31m", "white": "\033[1;37m", "green": "\033[1;32m",
     "red": "\033[1;31m",
 }
-NOCOLORS = dict(map(lambda c: (c, ""), COLORS.iterkeys()))
+NOCOLORS = dict(map(lambda c: (c, ""), COLORS))
 
 class Observer(object):
     enabled = True
@@ -281,7 +281,7 @@ def appTarget_all():
         activeModuleLibraries = ACTIVE_MODULES[:]
         map(lambda n: activeModuleLibraries.remove(n),
             filter(lambda n: activeModules[n].get("extbuildcmd") is not None,
-            activeModules.keys()))
+            activeModules))
         allLibraries = LIBRARIES + activeModuleLibraries 
         cmd = [LINKER]
         cmd.extend(LDFLAGS)
@@ -368,7 +368,7 @@ if __name__ == "__main__":
         os.makedirs(acBuildDirectory)
 
     # Check if desired modules exists
-    notFound = filter(lambda m: not m in MODULES.keys(), ACTIVE_MODULES)
+    notFound = filter(lambda m: not m in MODULES, ACTIVE_MODULES)
     if notFound:
         print "Error: No module(s) named %s found in MODULES." % notFound 
         exit(1)
