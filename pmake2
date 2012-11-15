@@ -1,0 +1,50 @@
+#!/usr/bin/python
+
+def rule(targets, prerequisites=None, **kwargs):
+    assert type(targets) in [str, list],
+        "'targets' can only be a 'str' or 'list' object."
+    assert type(prerequisites) in [None, str, list]
+        "'targets' can only be a 'str', 'list' object or 'None'."
+    def ruleDecorator(recipeFunc):
+        def decoratedRecipeFunc:
+            # TODO: Do it! :)
+        return decoratedRecipeFunc
+    return ruleDecorator
+
+
+# Rules for building
+
+@rule("all", "%(APPLICATION_BINARY)"):
+def makeAll():
+    pass
+
+@rule("%(APPLICATION_BINARY)", "%(MODULE)"):
+def makeApp():
+    pass
+
+@rule("%(MODULE)", "%(BUILD_DIR)/%(MODULE)/%(OBJECT)"):
+def makeModule():
+    pass
+
+@rule("%(BUILD_DIR)/%(MODULE)/%(OBJECT)", "%(MODULE)/%(SOURCE)"):
+def makeObject():
+    pass
+
+@rule("%(MODULE)/%(SOURCE)"):
+def makeCompile():
+    pass
+
+
+# Rules for cleaning
+
+@rule("clean", "clean_%(APPLICATION_NAME)"):
+def makeClean():
+    pass
+
+@rule("clean_%(APPLICATION_NAME)", "clean_%(MODULE)"):
+def makeCleanApp():
+    pass
+
+@rule("clean_%(MODULE)"):
+def makeCleanModule():
+    pass
