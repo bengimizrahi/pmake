@@ -5,7 +5,7 @@ LINKER = "g++"
 COMMON_CFLAGS = ["-O3", "-Wall",]
 LDFLAGS = ["-Xlinker", "--start-group"]
 
-BUILD_DIR = "Build"
+BUILD_DIR = ".build"
 
 ACTIVE_CONFIGURATION = "debug"
 CONFIGURATIONS = {
