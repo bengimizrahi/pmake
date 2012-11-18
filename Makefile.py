@@ -35,9 +35,6 @@ MODULES = {
 
 APPLICATION_NAME = "fap." + ACTIVE_CONFIGURATION
 
-@rule(None, "all")
-def makeNone(target):
-    pass
 
 @rule("all", APPLICATION_NAME)
 def makeAll(target):
