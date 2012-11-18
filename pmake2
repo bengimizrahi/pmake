@@ -2,6 +2,10 @@
 
 import subprocess, select
 
+DEFAULT_COMPILER = "gcc"
+DEFAULT_ARCHIVER = "ar"
+DEFAULT_LINKER = "gcc"
+
 rules = {}
 
 class Rule(object)
