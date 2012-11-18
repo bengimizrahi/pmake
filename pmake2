@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import subprocess, select
+
 rules = {}
 
 class Rule(object)
@@ -32,6 +34,46 @@ def rule(targets, prerequisites=None, **kwargs):
         return lambda target: None
     return ruleDecorator
 
+def runShellCommand(cmd, **kwargs):
+    if kwargs.get("verbose"):
+        print "%(white)%()s%(default)s" % COLORS % " ".join(cmd)
+    process = subprocess.Popen(cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
+    eof = {process.stdout: False, p.stderr: False}
+    try:
+        while not all(eof.values()):
+            for fd in select.select(list(eof), [], [])[0]:
+                line = fd.readline().strip()
+                if not line:
+                    eof[fd] = True
+                    continue
+                if ": warning: " in line:
+                    print "%(yellow)s%()s%(default)s" % COLORS % line
+                elif any((s in line for s in
+                        [": error: ", ": fatal error:"])):
+                    print "%(red)s%()s%(default)s" % COLORS % line
+                else:
+                    print line
+    except KeyboardInterrupt:
+        print
+        exit(1)
+    p.communicate()
+    return p.returncode
+ 
+def compile(**kwargs):
+    compiler = kwargs["compiler"]
+    includePaths = kwargs.get("includePaths", [])
+    libraryPaths = kwargs.get("libraryPaths", [])
+    libraries = kwargs.get("libraries", [])
+    defines = kwargs.get("defines", [])
+    objectFile = kwargs.get("objectFile")
+    sourceFile = kwargs["sourceFile"]
+    cmd = [compiler] + includePaths + libraryPaths +
+        libraries + defines + ["-c", sourceFile] +
+        ["-o", objectFile]
+    return runShellCommand(cmd, verbose=True)
+               
 
 APPLICATION_NAME = "fap"
 BUILD_DIR = "Build"
