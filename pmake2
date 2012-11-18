@@ -38,6 +38,23 @@ def rule(targets, prerequisites=None, **kwargs):
         return lambda target: None
     return ruleDecorator
 
+def validate(require, defaults):
+    def validateDecorator(f):
+        def newf(**kwargs):
+            missingRequiredArgs = filter(
+                lambda r: not r in kwargs, require)
+            if missingRequiredArgs:
+                print "Error: function %s requires: %s" % \
+                    ", ".join(missing)
+                return False
+            missingOptionalArgs = filter(
+                lambda o: not o in kwargs, defaults)
+            for o in missingOptionalArgs:
+                kwargs[o] = defaults[o]
+            return f(**kwargs)
+        return newf
+    return validateDecorator
+
 def runShellCommand(cmd, **kwargs):
     if kwargs.get("verbose"):
         print "%(white)%()s%(default)s" % COLORS % " ".join(cmd)
