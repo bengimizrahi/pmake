@@ -73,10 +73,3 @@ def compile(**kwargs):
         libraries + defines + ["-c", sourceFile] +
         ["-o", objectFile]
     return runShellCommand(cmd, verbose=True)
-               
-
-APPLICATION_NAME = "fap"
-BUILD_DIR = "Build"
-
-# Rules for building
-
