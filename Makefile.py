@@ -36,25 +36,29 @@ MODULES = {
 APPLICATION_NAME = "fap." + ACTIVE_CONFIGURATION
 
 
+# Rules for building
+
 @rule("all", APPLICATION_NAME)
 def makeAll(target):
     pass
 
-@rule(APPLICATION_NAME, MODULES.keys())
+@rule(APPLICATION_NAME, list(MODULES))
 def makeApp(target):
     pass
 
-@rule(MODULES.keys(), getObjectsByModule)
+@rule(list(MODULES), getObjectsByModule)
 def makeModule(target):
     pass
 
-@rule(getAllObjects(), getSourceByObject)
-def makeObject(target):
-    pass
+for module in MODULES:
+    @rule(getObjectsByModule(module), getSourceByObject)
+    def makeObject(target):
+        pass
 
-@rule(getAllSources())
-def makeCompile(target):
-    pass
+for module in MODULES:
+    @rule(getSourcesByModule(module), getDependsBySource)
+    def makeDepends(target):
+        pass
 
 
 # Rules for cleaning
