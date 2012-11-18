@@ -8,7 +8,7 @@ DEFAULT_LINKER = "gcc"
 
 rules = {}
 
-class Rule(object)
+class Rule(object):
     def __init__(self, target, prerequisites, recipe):
         self.target = target
         if type(prerequisites) == str:
@@ -25,15 +25,15 @@ class Rule(object)
         return False
 
 def rule(targets, prerequisites=None, **kwargs):
-    assert type(targets) in [str, list],
+    assert type(targets) in [str, list], \
         "'targets' can only be a 'str' or 'list' object."
     assert type(prerequisites) in [None, str] or \
-            callable(prerequisites):
+            callable(prerequisites), \
         "'prerequisites' can only be a 'None', 'str' or a callable."
     def ruleDecorator(recipeFunc):
         if type(targets) == str: targets = [targets] 
         for t in targets:
-            r = Rule(t, prerequisites, recipe)
+            r = Rule(t, prerequisites, recipeFunc)
             rules[t] = r
         return lambda target: None
     return ruleDecorator
@@ -45,7 +45,7 @@ def validate(require, defaults):
                 lambda r: not r in kwargs, require)
             if missingRequiredArgs:
                 print "Error: function %s requires: %s" % \
-                    ", ".join(missing)
+                    ", ".join(missingRequiredArgs)
                 return False
             missingOptionalArgs = filter(
                 lambda o: not o in kwargs, defaults)
@@ -61,7 +61,7 @@ def runShellCommand(cmd, **kwargs):
     process = subprocess.Popen(cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
-    eof = {process.stdout: False, p.stderr: False}
+    eof = {process.stdout: False, process.stderr: False}
     while not all(eof.values()):
         for fd in select.select(list(eof), [], [])[0]:
             line = fd.readline().strip()
@@ -75,8 +75,8 @@ def runShellCommand(cmd, **kwargs):
                 print "%(red)s%()s%(default)s" % COLORS % line
             else:
                 print line
-    p.communicate()
-    return p.returncode and True or False
+    process.communicate()
+    return process.returncode and True or False
 
 @validate(
     require=["depend", "source"],
@@ -93,7 +93,7 @@ def getDependList(**kwargs):
         includePaths.append("-I.")
     defines = kwargs["defines"]
     sourceFile = kwargs["source"]
-    cmd = [compiler, "-MM"] + includePaths +
+    cmd = [compiler, "-MM"] + includePaths + \
         defines + [sourceFile] + ["-o", dependFile]
     return runShellCommand(cmd, verbose=False)
 
@@ -104,7 +104,7 @@ def getDependList(**kwargs):
         "includePaths": [],
         "defines": [],
     })
-def compile(**kwargs):
+def compilee(**kwargs):
     compiler = kwargs["compiler"]
     includePaths = kwargs["includePaths"]
     if not "-I." in includePaths:
@@ -112,7 +112,7 @@ def compile(**kwargs):
     defines = kwargs["defines"]
     objectFile = kwargs["object"]
     sourceFile = kwargs["source"]
-    cmd = [compiler] + includePaths +
+    cmd = [compiler] + includePaths + \
         defines + ["-c", sourceFile] + ["-o", objectFile]
     return runShellCommand(cmd, verbose=True)
 

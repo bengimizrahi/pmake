@@ -36,7 +36,6 @@ MODULES = {
 
 APPLICATION_NAME = "fap." + ACTIVE_CONFIGURATION
 
-
 # Rules for building
 @rule("all", APPLICATION_NAME)
 def makeAll(target):
@@ -65,10 +64,11 @@ for module in MODULES:
 def makeClean(target):
     pass
 
-@rule("clean_" + APPLICATION_NAME, ["clean_" + m for m in MODULE.keys()])
+@rule("clean_" + APPLICATION_NAME,
+    ["clean_" + m for m in list(MODULE])
 def makeCleanApp(target):
     pass
 
-@rule(["clean_" + m for m in MODULE.keys()])
+@rule(["clean_" + m for m in list(MODULE])
 def makeCleanModule(target):
     pass
