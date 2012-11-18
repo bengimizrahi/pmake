@@ -2,6 +2,7 @@ COLOR = True
 
 COMPILER = "g++"
 LINKER = "g++"
+AR = "ar"
 COMMON_CFLAGS = ["-O3", "-Wall",]
 LDFLAGS = ["-Xlinker", "--start-group"]
 
