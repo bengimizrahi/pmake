@@ -80,6 +80,10 @@ BUILD_DIR = "Build"
 
 # Rules for building
 
+@rule(None, "all")
+def makeNone(target):
+    pass
+
 @rule("all", APPLICATION_NAME):
 def makeAll(target):
     pass
