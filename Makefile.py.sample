@@ -23,14 +23,14 @@ LIBRARY_PATHS = []
 LIBRARIES = []
 
 MODULES = {
-  "main" : {
-      "incpaths" : ["system"],
-      "defines" : [],
-  },
-  "system" : {
-      "incpaths" : [],
-      "defines" : [],
-  },
+    "main" : {
+        "incpaths" : ["system"],
+        "defines" : [],
+    },
+    "system" : {
+        "incpaths" : [],
+        "defines" : [],
+    },
 }
 
 APPLICATION_NAME = "fap." + ACTIVE_CONFIGURATION
