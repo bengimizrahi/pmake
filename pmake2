@@ -62,23 +62,19 @@ def runShellCommand(cmd, **kwargs):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
     eof = {process.stdout: False, p.stderr: False}
-    try:
-        while not all(eof.values()):
-            for fd in select.select(list(eof), [], [])[0]:
-                line = fd.readline().strip()
-                if not line:
-                    eof[fd] = True
-                    continue
-                if ": warning: " in line:
-                    print "%(yellow)s%()s%(default)s" % COLORS % line
-                elif any((s in line for s in
-                        [": error: ", ": fatal error:"])):
-                    print "%(red)s%()s%(default)s" % COLORS % line
-                else:
-                    print line
-    except KeyboardInterrupt:
-        print
-        exit(1)
+    while not all(eof.values()):
+        for fd in select.select(list(eof), [], [])[0]:
+            line = fd.readline().strip()
+            if not line:
+                eof[fd] = True
+                continue
+            if ": warning: " in line:
+                print "%(yellow)s%()s%(default)s" % COLORS % line
+            elif any((s in line for s in
+                    [": error: ", ": fatal error:"])):
+                print "%(red)s%()s%(default)s" % COLORS % line
+            else:
+                print line
     p.communicate()
     return p.returncode
  
