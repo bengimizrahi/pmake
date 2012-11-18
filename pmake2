@@ -76,7 +76,7 @@ def runShellCommand(cmd, **kwargs):
             else:
                 print line
     p.communicate()
-    return p.returncode
+    return p.returncode and True or False
  
 def compile(**kwargs):
     compiler = kwargs["compiler"]
