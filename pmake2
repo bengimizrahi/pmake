@@ -77,16 +77,53 @@ def runShellCommand(cmd, **kwargs):
                 print line
     p.communicate()
     return p.returncode and True or False
- 
+
+@validate(
+    require=["depend", "source"],
+    defaults={
+        "compiler": DEFAULT_COMPILER,
+        "includePaths": [],
+        "defines": [],
+    })
+def getDependList(**kwargs):
+    compiler = kwargs["compiler"]
+    includePaths = kwargs["includePaths"]
+    dependFile = kwargs["depend"]
+    if not "-I." in includePaths:
+        includePaths.append("-I.")
+    defines = kwargs["defines"]
+    sourceFile = kwargs["source"]
+    cmd = [compiler, "-MM"] + includePaths +
+        defines + [sourceFile] + ["-o", dependFile]
+    return runShellCommand(cmd, verbose=False)
+
+@validate(
+    require=["object", "source"],
+    defaults={
+        "compiler": DEFAULT_COMPILER,
+        "includePaths": [],
+        "defines": [],
+    })
 def compile(**kwargs):
     compiler = kwargs["compiler"]
-    includePaths = kwargs.get("includePaths", [])
-    libraryPaths = kwargs.get("libraryPaths", [])
-    libraries = kwargs.get("libraries", [])
-    defines = kwargs.get("defines", [])
-    objectFile = kwargs.get("objectFile")
-    sourceFile = kwargs["sourceFile"]
-    cmd = [compiler] + includePaths + libraryPaths +
-        libraries + defines + ["-c", sourceFile] +
-        ["-o", objectFile]
+    includePaths = kwargs["includePaths"]
+    if not "-I." in includePaths:
+        includePaths.append("-I.")
+    defines = kwargs["defines"]
+    objectFile = kwargs["object"]
+    sourceFile = kwargs["source"]
+    cmd = [compiler] + includePaths +
+        defines + ["-c", sourceFile] + ["-o", objectFile]
+    return runShellCommand(cmd, verbose=True)
+
+@validate(
+    require=["archive", "objects"],
+    defaults={
+        "linker": DEFAULT_LINKER,
+    })
+def link(**kwargs):
+    linker = kwargs["linker"]
+    archiveFile = kwargs["archive"]
+    objectFiles = kwargs["objects"]
+    cmd = [linker, "cr", archiveFile] + objectFiles
     return runShellCommand(cmd, verbose=True)
