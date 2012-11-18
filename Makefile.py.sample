@@ -1,24 +1,9 @@
 COLOR = True
 
-CROSS_COMPILE = "arm-none-linux-gnueabi-"
-CC = CROSS_COMPILE + "gcc"
-CPPC = CROSS_COMPILE + "g++"
-LINKER = CROSS_COMPILE + "g++"
-COMMON_CFLAGS = ["-O3", "-Wall", "-Wno-psabi"]
-LDFLAGS = ["-static", "-Xlinker", "--start-group"]
-
-LANGUAGE_SETTINGS = {
-    "c" : {
-	"compiler" : CC,
-	"headerext" : [".h"],
-	"sourceext" : [".c"],
-    },
-    "c++" : {
-	"compiler" : CPPC,
-	"headerext" : [".h"],
-	"sourceext" : [".cpp"],
-    },
-}
+COMPILER = "g++"
+LINKER = "g++"
+COMMON_CFLAGS = ["-O3", "-Wall",]
+LDFLAGS = ["-Xlinker", "--start-group"]
 
 BUILD_DIR = "Build"
 
@@ -37,17 +22,12 @@ CONFIGURATIONS = {
 LIBRARY_PATHS = []
 LIBRARIES = []
 
-ACTIVE_MODULES = ["main", "system"]
 MODULES = {
   "main" : {
-      "directory" : ".",
-      "language" : "c++",
       "incpaths" : ["system"],
       "defines" : [],
   },
   "system" : {
-      "directory" : "system",
-      "language" : "c++",
       "incpaths" : [],
       "defines" : [],
   },
