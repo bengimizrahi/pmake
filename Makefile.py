@@ -11,12 +11,12 @@ BUILD_DIR = ".build"
 ACTIVE_CONFIGURATION = "debug"
 CONFIGURATIONS = {
     "debug" : {
-	"flags" : COMMON_CFLAGS + ["-g"],
-	"buildsubdir" : "Debug",
+        "flags" : COMMON_CFLAGS + ["-g"],
+        "buildsubdir" : "Debug",
     },
     "release" : {
-	"flags" : COMMON_CFLAGS,
-	"buildsubdir" : "Release",
+        "flags" : COMMON_CFLAGS,
+        "buildsubdir" : "Release",
     },
 }
 
@@ -38,7 +38,6 @@ APPLICATION_NAME = "fap." + ACTIVE_CONFIGURATION
 
 
 # Rules for building
-
 @rule("all", APPLICATION_NAME)
 def makeAll(target):
     pass
@@ -61,9 +60,7 @@ for module in MODULES:
     def makeDepends(target):
         pass
 
-
 # Rules for cleaning
-
 @rule("clean", "clean_" + APPLICATION_NAME)
 def makeClean(target):
     pass
