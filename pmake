@@ -218,12 +218,27 @@ if __name__ == "__main__":
     
     @rule(list(modules), getObjectsOfModule)
     def makeModule(target):
-        pass
+        archive = os.path.join(
+            getBuildConfigurationDirectoryPath(activeConfiguration),
+            target, "lib%s.a" % target)
+        link(linker=linker,
+            objects=getObjectsOfModule(target)
+            archive=archive)
     
     for m in modules:
         @rule(getObjectsOfModule(m), getDependsOfObject, m)
         def makeObject(target, m):
-            pass
+            prefix = os.path.splitext(target)[0]
+            source = prefix + ".c"
+            compilee(compiler=compiler,
+                includePaths=m["incpaths"],
+                source=source,
+                object=target)
+            depend = prefix + ".d"
+            makeDepend(compiler=compiler,
+                includePaths=m["incpaths"],
+                source=source,
+                depend=depend)
     
     # Rules for cleaning
     @rule("clean", "clean_" + applicationName)
