@@ -51,7 +51,7 @@ DEFAULT_LINKER = "gcc"
 rules = {}
 
 class Rule(object):
-    def __init__(self, target, prerequisites, recipe):
+    def __init__(self, target, prerequisites, recipe, args, kwargs):
         self.target = target
         if type(prerequisites) == str:
             self.prerequisites = [prerequisites]
@@ -60,22 +60,25 @@ class Rule(object):
         elif callable(prerequisites):
             self.prerequisites = prerequisites(target)
         self.recipe = recipe
+        self.args = args
+        self.kwargs = kwargs
     def __repr__(self):
-        return "Rule(%s -> %s (%s))" % (self.target, self.prerequisites,
-            self.recipe.__name__)
+        return "Rule(%s: %s | %s(%s,%s))" % (self.target, self.prerequisites,
+            self.recipe.__name__, self.args,
+            self.kwargs)
     def do(self):
         return False
 
-def rule(targets, prerequisites=None, **kwargs):
+def rule(targets, prerequisites=None, *args, **kwargs):
     assert type(targets) in [str, list], \
         "'targets' can only be a 'str' or 'list' object."
     assert type(prerequisites) in [None, str] or \
             callable(prerequisites), \
         "'prerequisites' can only be a 'None', 'str' or a callable."
-    def ruleDecorator(recipeFunc):
+    def ruleDecorator(recipe):
         if type(targets) == str: targets = [targets] 
         for t in targets:
-            r = Rule(t, prerequisites, recipeFunc)
+            r = Rule(t, prerequisites, recipe, args, kwargs)
             rules[t] = r
         return lambda target: None
     return ruleDecorator
@@ -219,8 +222,8 @@ if __name__ == "__main__":
         pass
     
     for m in modules:
-        @rule(getObjectsOfModule(m), getDependsOfObject)
-        def makeObject(target):
+        @rule(getObjectsOfModule(m), getDependsOfObject, m)
+        def makeObject(target, m):
             pass
     
     # Rules for cleaning
