@@ -21,11 +21,11 @@ configurations = {
 libraryPaths = []
 libraries = []
 modules = {
-    "main" : {
-        "incpaths" : ["system"],
+    "app" : {
+        "incpaths" : ["rrm"],
         "defines" : [],
     },
-    "system" : {
+    "rrm" : {
         "incpaths" : [],
         "defines" : [],
     },
@@ -137,7 +137,7 @@ def runShellCommand(cmd, **kwargs):
         "includePaths": [],
         "defines": [],
     })
-def getDependList(**kwargs):
+def makeDepend(**kwargs):
     compiler = kwargs["compiler"]
     includePaths = kwargs["includePaths"]
     dependFile = kwargs["depend"]
@@ -205,7 +205,14 @@ if __name__ == "__main__":
         pass
 
     def getDependsOfSource(source):
-        pass
+        dependPath = os.path.join(
+            getBuildConfigurationDirectoryPath(activeConfiguration),
+            os.path.splitext(source)[0] + ".d")
+        if not os.path.exists(dependPath):
+            return []
+        with file(dependPath) as f:
+            <continue>    
+        
 
     # Rules for building
     @rule("all", applicationName)
