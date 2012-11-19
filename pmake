@@ -80,6 +80,12 @@ def rule(targets, prerequisites=None, **kwargs):
         return lambda target: None
     return ruleDecorator
 
+def cache(f):
+    results = {}
+    def newf(arg):
+        return results.setdefault(arg, f(arg))
+    return newf
+
 def validate(require, defaults):
     def validateDecorator(f):
         def newf(**kwargs):
