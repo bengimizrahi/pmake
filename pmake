@@ -63,7 +63,8 @@ class Rule(object):
         self.args = args
         self.kwargs = kwargs
     def __repr__(self):
-        return "Rule(%s: %s | %s(%s,%s))" % (self.target, self.prerequisites,
+        return "Rule(%s: %s | %s(%s,%s))" % (self.target,
+                self.prerequisites,
             self.recipe.__name__, self.args,
             self.kwargs)
     def do(self):
@@ -190,7 +191,8 @@ def getBuildDirectoryPath():
 
 @cache
 def getBuildConfigurationDirectoryPath(configName):
-    return getBuildDirectoryPath() + configurations[configName]["buildsubdir"] 
+    return getBuildDirectoryPath() + \
+        configurations[configName]["buildsubdir"]
 
 # ----------------- Build instructions -----------------
 
