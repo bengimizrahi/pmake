@@ -135,17 +135,6 @@ def link(**kwargs):
     cmd = [linker, "cr", archiveFile] + objectFiles
     return runShellCommand(cmd, verbose=True)
 
-def getObjectsOfModule(module):
-    pass
-
-def getSourceFromObject(objectFile):
-    pass
-
-def getSourcesOfModule(module):
-    pass
-
-def getDependsOfSource(source):
-    pass
 
 
 if __name__ == "__main__":
@@ -180,6 +169,18 @@ if __name__ == "__main__":
         },
     }
     applicationName = "fap." + activeConfiguration
+
+    def getObjectsOfModule(module):
+        pass
+
+    def getSourceFromObject(objectFile):
+        pass
+
+    def getSourcesOfModule(module):
+        pass
+
+    def getDependsOfSource(source):
+        pass
 
     # Rules for building
     @rule("all", applicationName)
