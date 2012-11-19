@@ -179,6 +179,15 @@ def link(**kwargs):
 def make():
     pass
 
+def getRootDirectoryPath():
+    return os.getcwd()
+
+def getBuildDirectoryPath():
+    return getRootDirectory() + buildDir
+
+@cache
+def getBuildConfigurationDirectoryPath(configName):
+    return getBuildDirectoryPath() + configurations[configName]["buildsubdir"] 
 
 # ----------------- Build instructions -----------------
 
