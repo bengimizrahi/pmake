@@ -1,5 +1,40 @@
 #!/usr/bin/python
 
+enableColor = True
+compiler = "g++"
+linker = "g++"
+ar = "ar"
+commonCflags = ["-O3", "-Wall",]
+ldFlags = ["-Xlinker", "--start-group"]
+buildDir = ".build"
+activeConfiguration = "debug"
+configurations = {
+    "debug" : {
+        "flags" : commonCflags + ["-g"],
+        "buildsubdir" : "Debug",
+    },
+    "release" : {
+        "flags" : commonCflags,
+        "buildsubdir" : "Release",
+    },
+}
+libraryPaths = []
+libraries = []
+modules = {
+    "main" : {
+        "incpaths" : ["system"],
+        "defines" : [],
+    },
+    "system" : {
+        "incpaths" : [],
+        "defines" : [],
+    },
+}
+applicationName = "fap." + activeConfiguration
+
+
+# -------------------- API --------------------
+
 import subprocess, select
 import os, sys
 
@@ -135,40 +170,13 @@ def link(**kwargs):
     cmd = [linker, "cr", archiveFile] + objectFiles
     return runShellCommand(cmd, verbose=True)
 
+def make():
+    pass
 
+
+# ----------------- Build instructions -----------------
 
 if __name__ == "__main__":
-    enableColor = True
-    compiler = "g++"
-    linker = "g++"
-    ar = "ar"
-    commonCflags = ["-O3", "-Wall",]
-    ldFlags = ["-Xlinker", "--start-group"]
-    buildDir = ".build"
-    activeConfiguration = "debug"
-    configurations = {
-        "debug" : {
-            "flags" : commonCflags + ["-g"],
-            "buildsubdir" : "Debug",
-        },
-        "release" : {
-            "flags" : commonCflags,
-            "buildsubdir" : "Release",
-        },
-    }
-    libraryPaths = []
-    libraries = []
-    modules = {
-        "main" : {
-            "incpaths" : ["system"],
-            "defines" : [],
-        },
-        "system" : {
-            "incpaths" : [],
-            "defines" : [],
-        },
-    }
-    applicationName = "fap." + activeConfiguration
 
     def getObjectsOfModule(module):
         pass
