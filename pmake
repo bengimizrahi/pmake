@@ -135,16 +135,16 @@ def link(**kwargs):
     cmd = [linker, "cr", archiveFile] + objectFiles
     return runShellCommand(cmd, verbose=True)
 
-def getObjectsByModule(module):
+def getObjectsOfModule(module):
     pass
 
-def getSourceByObject(objectFile):
+def getSourceFromObject(objectFile):
     pass
 
-def getSourcesByModule(module):
+def getSourcesOfModule(module):
     pass
 
-def getDependsBySource(source):
+def getDependsOfSource(source):
     pass
 
 
@@ -190,12 +190,12 @@ if __name__ == "__main__":
     def makeApp(target):
         pass
     
-    @rule(list(modules), getObjectsByModule)
+    @rule(list(modules), getObjectsOfModule)
     def makeModule(target):
         pass
     
     for m in modules:
-        @rule(getObjectsByModule(m), getDependsByObject)
+        @rule(getObjectsOfModule(m), getDependsOfObject)
         def makeObject(target):
             pass
     
