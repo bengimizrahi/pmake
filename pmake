@@ -199,9 +199,6 @@ if __name__ == "__main__":
     def getObjectsOfModule(module):
         pass
 
-    def getSourceFromObject(objectFile):
-        pass
-
     def getSourcesOfModule(module):
         pass
 
