@@ -195,13 +195,8 @@ if __name__ == "__main__":
         pass
     
     for m in modules:
-        @rule(getObjectsByModule(m), getSourceByObject)
+        @rule(getObjectsByModule(m), getDependsByObject)
         def makeObject(target):
-            pass
-    
-    for m in modules:
-        @rule(getSourcesByModule(m), getDependsBySource)
-        def makeDepends(target):
             pass
     
     # Rules for cleaning
