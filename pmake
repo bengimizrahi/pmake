@@ -20,12 +20,7 @@ rules = {}
 class Rule(object):
     def __init__(self, target, prerequisites, recipe, args, kwargs):
         self.target = target
-        if type(prerequisites) == str:
-            self.prerequisites = [prerequisites]
-        elif type(prerequisites) == list:
-            self.prerequisites = prerequisites
-        elif callable(prerequisites):
-            self.prerequisites = prerequisites(target)
+        self.prerequisites = prerequisites
         self.recipe = recipe
         self.args = args
         self.kwargs = kwargs
@@ -35,6 +30,18 @@ class Rule(object):
             self.recipe.__name__, self.args,
             self.kwargs)
     def make(self):
+        if type(self.prerequisites) == list:
+            prerequisites = self.prerequisites
+        if type(self.prerequisites) == str:
+            prerequisites = [self.prerequisites]
+        elif callable(self.prerequisites):
+            prerequisites = self.prerequisites(target, *args, **kwargs)
+        if not any(map(lambda p: rules[p].make(), prerequisites)):
+            [check utime here]
+            return False
+        rt = self.recipe(target, *args, **kwargs)
+        if (rt is None) or (rt is 0):
+            return True
         return False
 
 def rule(targets, prerequisites=None, *args, **kwargs):
