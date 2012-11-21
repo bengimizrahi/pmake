@@ -1,39 +1,6 @@
 #!/usr/bin/python
 
-enableColor = True
-compiler = "g++"
-linker = "g++"
-ar = "ar"
-commonCflags = ["-O3", "-Wall",]
-ldFlags = ["-Xlinker", "--start-group"]
-buildDir = ".build"
-activeConfiguration = "debug"
-configurations = {
-    "debug" : {
-        "flags" : commonCflags + ["-g"],
-        "buildsubdir" : "Debug",
-    },
-    "release" : {
-        "flags" : commonCflags,
-        "buildsubdir" : "Release",
-    },
-}
-libraryPaths = []
-libraries = []
-modules = {
-    "app" : {
-        "incpaths" : ["rrm"],
-        "defines" : [],
-    },
-    "rrm" : {
-        "incpaths" : [],
-        "defines" : [],
-    },
-}
-applicationName = "fap." + activeConfiguration
-
-
-# -------------------- API --------------------
+# -------------------- pmake --------------------
 
 import subprocess, select
 import os, sys
@@ -180,11 +147,42 @@ def link(**kwargs):
     cmd = [linker, "cr", archiveFile] + objectFiles
     return runShellCommand(cmd, verbose=True)
 
-def make():
-    pass
-
 def getRootDirectoryPath():
     return os.getcwd()
+
+# ----------------- Makefile.py -----------------
+
+enableColor = True
+compiler = "g++"
+linker = "g++"
+ar = "ar"
+commonCflags = ["-O3", "-Wall",]
+ldFlags = ["-Xlinker", "--start-group"]
+buildDir = ".build"
+activeConfiguration = "debug"
+configurations = {
+    "debug" : {
+        "flags" : commonCflags + ["-g"],
+        "buildsubdir" : "Debug",
+    },
+    "release" : {
+        "flags" : commonCflags,
+        "buildsubdir" : "Release",
+    },
+}
+libraryPaths = []
+libraries = []
+modules = {
+    "app" : {
+        "incpaths" : ["rrm"],
+        "defines" : [],
+    },
+    "rrm" : {
+        "incpaths" : [],
+        "defines" : [],
+    },
+}
+applicationName = "fap." + activeConfiguration
 
 def getBuildDirectoryPath():
     return getRootDirectory() + buildDir
@@ -194,72 +192,71 @@ def getBuildConfigurationDirectoryPath(configName):
     return getBuildDirectoryPath() + \
         configurations[configName]["buildsubdir"]
 
-# ----------------- Build instructions -----------------
+def getObjectsOfModule(module):
+    pass
+
+def getSourcesOfModule(module):
+    pass
+
+def getDependsOfSource(source):
+    dependPath = os.path.join(
+        getBuildConfigurationDirectoryPath(activeConfiguration),
+        os.path.splitext(source)[0] + ".d")
+    if not os.path.exists(dependPath):
+        return []
+    with file(dependPath) as f:
+        <continue>    
+
+# Rules for building
+@rule("all", applicationName)
+def makeAll(target):
+    pass
+
+@rule(applicationName, list(modules))
+def makeApp(target):
+    pass
+
+@rule(list(modules), getObjectsOfModule)
+def makeModule(target):
+    archive = os.path.join(
+        getBuildConfigurationDirectoryPath(activeConfiguration),
+        target, "lib%s.a" % target)
+    link(linker=linker,
+        objects=getObjectsOfModule(target)
+        archive=archive)
+
+for m in modules:
+    @rule(getObjectsOfModule(m), getDependsOfObject, m)
+    def makeObject(target, m):
+        prefix = os.path.splitext(target)[0]
+        source = prefix + ".c"
+        compilee(compiler=compiler,
+            includePaths=m["incpaths"],
+            source=source,
+            object=target)
+        depend = prefix + ".d"
+        makeDepend(compiler=compiler,
+            includePaths=m["incpaths"],
+            source=source,
+            depend=depend)
+
+# Rules for cleaning
+@rule("clean", "clean_" + applicationName)
+def makeClean(target):
+    pass
+
+@rule("clean_" + applicationName,
+    ["clean_" + m for m in list(modules)])
+def makeCleanApp(target):
+    pass
+
+@rule(["clean_" + m for m in list(modules)])
+def makeCleanModule(target):
+    pass
+
+# ----------------- pmake -----------------------
 
 if __name__ == "__main__":
-
-    def getObjectsOfModule(module):
-        pass
-
-    def getSourcesOfModule(module):
-        pass
-
-    def getDependsOfSource(source):
-        dependPath = os.path.join(
-            getBuildConfigurationDirectoryPath(activeConfiguration),
-            os.path.splitext(source)[0] + ".d")
-        if not os.path.exists(dependPath):
-            return []
-        with file(dependPath) as f:
-            <continue>    
-        
-
-    # Rules for building
-    @rule("all", applicationName)
-    def makeAll(target):
-        pass
-    
-    @rule(applicationName, list(modules))
-    def makeApp(target):
-        pass
-    
-    @rule(list(modules), getObjectsOfModule)
-    def makeModule(target):
-        archive = os.path.join(
-            getBuildConfigurationDirectoryPath(activeConfiguration),
-            target, "lib%s.a" % target)
-        link(linker=linker,
-            objects=getObjectsOfModule(target)
-            archive=archive)
-    
-    for m in modules:
-        @rule(getObjectsOfModule(m), getDependsOfObject, m)
-        def makeObject(target, m):
-            prefix = os.path.splitext(target)[0]
-            source = prefix + ".c"
-            compilee(compiler=compiler,
-                includePaths=m["incpaths"],
-                source=source,
-                object=target)
-            depend = prefix + ".d"
-            makeDepend(compiler=compiler,
-                includePaths=m["incpaths"],
-                source=source,
-                depend=depend)
-    
-    # Rules for cleaning
-    @rule("clean", "clean_" + applicationName)
-    def makeClean(target):
-        pass
-    
-    @rule("clean_" + applicationName,
-        ["clean_" + m for m in list(modules)])
-    def makeCleanApp(target):
-        pass
-    
-    @rule(["clean_" + m for m in list(modules)])
-    def makeCleanModule(target):
-        pass
 
     # Determine if colorful output is desired
     if not enableColor:
@@ -270,5 +267,5 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         target = sys.argv[1]
     
-    # BUILD IT!
+    # MAKE THE TARGET
     
