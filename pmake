@@ -217,7 +217,7 @@ def getBuildDirectoryPath():
     return getRootDirectory() + buildDir
 
 @cache
-def getBuildConfigurationDirectoryPath(configName):
+def getConfigurationBuildDirectoryPath(configName):
     return getBuildDirectoryPath() + \
         configurations[configName]["buildsubdir"]
 
@@ -238,7 +238,7 @@ def getSourceOfObject(objectFile):
 
 def getDependsOfObject(source):
     dependPath = os.path.join(
-        getBuildConfigurationDirectoryPath(activeConfiguration),
+        getConfigurationBuildDirectoryPath(activeConfiguration),
         os.path.splitext(source)[0] + ".d")
     if not os.path.exists(dependPath):
         return []
