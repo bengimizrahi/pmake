@@ -221,8 +221,17 @@ def getBuildConfigurationDirectoryPath(configName):
     return getBuildDirectoryPath() + \
         configurations[configName]["buildsubdir"]
 
-def getObjectsOfModule(module):
-    pass
+def getObjectsOfModule(module, filterQuery=None):
+    objects = []
+    if filterQuery:
+        filterQuery.replace("?", "absf")
+    for rootDir, subdirs, files in os.walk(module["directory"]):
+        for f in files:
+            absf = os.path.join(rootDir, f)
+            if filterQuery and not eval(filterQuery):
+                continue
+            objects.append(absf)
+    return objects
 
 def getSourcesOfModule(module):
     pass
