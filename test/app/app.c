@@ -2,3 +2,5 @@
 #include "oam.h"
 #include "rrm.h"
 #include "son.h"
+
+int main() {}
