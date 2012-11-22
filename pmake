@@ -17,6 +17,12 @@ DEFAULT_LINKER = "gcc"
 
 rules = {}
 
+class Phony(object):
+    def __init__(self, target):
+        self.target = target
+    def __repr__(self):
+        return "Phony(%s)" % self.target
+
 class Rule(object):
     def __init__(self, target, prerequisites, recipe, args, kwargs):
         self.target = target
