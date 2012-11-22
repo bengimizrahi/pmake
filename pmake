@@ -30,19 +30,29 @@ class Rule(object):
             self.recipe.__name__, self.args,
             self.kwargs)
     def make(self):
+        shouldRunRecipe = False
         if type(self.prerequisites) == list:
             prerequisites = self.prerequisites
         if type(self.prerequisites) == str:
             prerequisites = [self.prerequisites]
         elif callable(self.prerequisites):
             prerequisites = self.prerequisites(target, *args, **kwargs)
-        if not any(map(lambda p: rules[p].make(), prerequisites)):
-            [check utime here]
+        for p in prerequisites:
+            if p in rules:
+                if rules[p].make():
+                    shouldRunRecipe = True
+            else:
+                if os.utime(self.target) < os.utime(p):
+                    shouldRunRecipe = True
+        if shouldRunRecipe:
+            rt = self.recipe(target, *args, **kwargs)
+            if (rt is None) or (rt is 0):
+                return True
+            else:
+                exit(rt)
+        else:
             return False
-        rt = self.recipe(target, *args, **kwargs)
-        if (rt is None) or (rt is 0):
-            return True
-        return False
+
 
 def rule(targets, prerequisites=None, *args, **kwargs):
     assert type(targets) in [str, list], \
