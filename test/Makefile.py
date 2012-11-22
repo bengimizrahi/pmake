@@ -33,6 +33,10 @@ modules = {
 applicationName = "fap." + activeConfiguration
 
 @cache
+def getModuleDirectory(moduleName):
+    return modules.get("directory", moduleName)
+
+@cache
 def getBuildDirectoryPath():
     return getRootDirectory() + buildDir
 
@@ -54,10 +58,17 @@ def getArchives():
 @cache
 def getObjectsOfModule(module):
     objects = []
+<<<<<<< HEAD
     query = module.get["sourcefilter"]
     if query:
         query.replace("?", "absf")
     for rootDir, subdirs, files in os.walk(module["directory"]):
+=======
+    if filterQuery:
+        filterQuery.replace("?", "absf")
+    for rootDir, subdirs, files in os.walk(
+	    getModuleDirectory(module)):
+>>>>>>> Use getModuleDirectory()
         for f in files:
             absf = os.path.join(rootDir, f)
             if query and not eval(query):
