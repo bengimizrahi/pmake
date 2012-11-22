@@ -57,9 +57,9 @@ class Rule(object):
 def rule(targets, prerequisites=None, *args, **kwargs):
     assert type(targets) in [str, list], \
         "'targets' can only be a 'str' or 'list' object."
-    assert type(prerequisites) in [None, str] or \
+    assert type(prerequisites) in [None, str, list] or \
             callable(prerequisites), \
-        "'prerequisites' can only be a 'None', 'str' or a callable."
+        "'prerequisites' can only be a 'None', 'str', 'list' or a callable."
     def ruleDecorator(recipe):
         if type(targets) == str: targets = [targets] 
         for t in targets:
