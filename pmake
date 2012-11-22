@@ -32,8 +32,7 @@ class Rule(object):
         self.kwargs = kwargs
     def __repr__(self):
         return "Rule(%s: %s | %s(%s,%s))" % (self.target,
-                self.prerequisites,
-            self.recipe.__name__, self.args,
+            self.prerequisites, self.recipe.__name__, self.args,
             self.kwargs)
     def make(self):
         shouldRunRecipe = False
