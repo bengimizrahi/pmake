@@ -74,8 +74,7 @@ def rule(targets, prerequisites=None, *args, **kwargs):
             callable(prerequisites), \
         "'prerequisites' can only be a 'None', 'str', 'list' or a callable."
     def ruleDecorator(recipe):
-        if type(targets) == str: targets = [targets] 
-        for t in targets:
+        for t in type(targets) == list and targets or [targets]:
             r = Rule(t, prerequisites, recipe, args, kwargs)
             rules[t] = r
         return lambda target: None
