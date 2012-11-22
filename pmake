@@ -45,7 +45,7 @@ class Rule(object):
             prerequisites = [self.prerequisites]
         elif callable(self.prerequisites):
             prerequisites = self.prerequisites(target, *args, **kwargs)
-        if not p:
+        if not prerequisites:
             shouldRunRecipe = True
         else:
             for p in prerequisites:
