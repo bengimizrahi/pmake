@@ -238,11 +238,11 @@ def getDependsOfSource(source):
         <continue>    
 
 # Rules for building
-@rule("all", applicationName)
+@rule(Phony("all"), applicationName)
 def makeAll(target):
     pass
 
-@rule(applicationName, list(modules))
+@rule(applicationName, [Phony(m) for m in list(modules))
 def makeApp(target):
     pass
 
