@@ -87,7 +87,7 @@ def getDependsOfObject(source):
 def makeAll(target):
     pass
 
-@rule(applicationName, [Phony(m) for m in list(modules))
+@rule(applicationName, [Phony(m) for m in list(modules)])
 def makeApp(target):
     archives = getArchives()
     link(libraries=archives + libraries,
