@@ -233,8 +233,8 @@ def getObjectsOfModule(module, filterQuery=None):
             objects.append(absf)
     return objects
 
-def getSourcesOfModule(module):
-    pass
+def getSourceOfObject(objectFile):
+    return os.path.splitext(objectFile)[0] + ".c"
 
 def getDependsOfSource(source):
     dependPath = os.path.join(
