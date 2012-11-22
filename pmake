@@ -37,13 +37,20 @@ class Rule(object):
             prerequisites = [self.prerequisites]
         elif callable(self.prerequisites):
             prerequisites = self.prerequisites(target, *args, **kwargs)
-        for p in prerequisites:
-            if p in rules:
-                if rules[p].make():
-                    shouldRunRecipe = True
-            else:
-                if os.utime(self.target) < os.utime(p):
-                    shouldRunRecipe = True
+        if not p:
+            shouldRunRecipe = True
+        else:
+            for p in prerequisites:
+                if p in rules:
+                    if rules[p].make():
+                        shouldRunRecipe = True
+                    elif not isinstance(Phony, self.target) and \
+                             os.utime(self.target < os.utime(p)):
+                        shouldRunRecipe = True
+                else:
+                    if not isinstance(Phony, self.target) and \
+                            os.utime(self.target) < os.utime(p)):
+                        shouldRunRecipe = True
         if shouldRunRecipe:
             rt = self.recipe(target, *args, **kwargs)
             if (rt is None) or (rt is 0):
