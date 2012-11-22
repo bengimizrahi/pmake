@@ -236,14 +236,17 @@ def getObjectsOfModule(module, filterQuery=None):
 def getSourceOfObject(objectFile):
     return os.path.splitext(objectFile)[0] + ".c"
 
-def getDependsOfSource(source):
+def getDependsOfObject(source):
     dependPath = os.path.join(
         getBuildConfigurationDirectoryPath(activeConfiguration),
         os.path.splitext(source)[0] + ".d")
     if not os.path.exists(dependPath):
         return []
     with file(dependPath) as f:
-        <continue>    
+        trans = string.maketrans('\\\n', '  ')
+        _, _, d = (t.strip() for t in
+            f.read().translate(trans).strip().partition(":"))
+        return d.split()
 
 # Rules for building
 @rule(Phony("all"), applicationName)
