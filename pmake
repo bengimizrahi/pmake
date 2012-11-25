@@ -167,7 +167,7 @@ def compilee(**kwargs):
 @validate(
     require=["archive", "objects"],
     defaults={
-        "linker": DEFAULT_LINKER,
+        "linker": DEFAULT_ARCHIVER,
     })
 def archive(**kwargs):
     archiver = kwargs["archiver"]
