@@ -118,6 +118,9 @@ def makeCleanApp(target):
         getBuildConfigurationDirectoryPath(activeConfiguration), 
         applicationName))
 
-@rule(["clean_" + m for m in list(modules)])
-def makeCleanModule(target):
-    pass
+for m in modules:
+    @rule(Phony("clean_" + m), None, m)
+    def makeCleanModule(target, module):
+        shutil.rmtree(os.path.join(
+            getBuildConfigurationDirectoryPath(activeConfiguration),
+            getModuleDirectory()))
