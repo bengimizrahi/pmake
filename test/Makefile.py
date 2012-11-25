@@ -32,6 +32,7 @@ modules = {
 }
 applicationName = "fap." + activeConfiguration
 
+@cache
 def getBuildDirectoryPath():
     return getRootDirectory() + buildDir
 
