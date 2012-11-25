@@ -40,6 +40,7 @@ def getConfigurationBuildDirectoryPath(configName):
     return getBuildDirectoryPath() + \
         configurations[configName]["buildsubdir"]
 
+@cache
 def getObjectsOfModule(module):
     objects = []
     query = module.get["sourcefilter"]
@@ -53,9 +54,11 @@ def getObjectsOfModule(module):
             objects.append(absf)
     return objects
 
+@cache
 def getSourceOfObject(objectFile):
     return os.path.splitext(objectFile)[0] + ".c"
 
+@cache
 def getDependsOfObject(source):
     dependPath = os.path.join(
         getConfigurationBuildDirectoryPath(activeConfiguration),
