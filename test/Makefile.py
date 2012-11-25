@@ -38,8 +38,11 @@ def getBuildDirectoryPath():
 
 @cache
 def getConfigurationBuildDirectoryPath(configName):
-    return getBuildDirectoryPath() + \
+    p = getBuildDirectoryPath() + \
         configurations[configName]["buildsubdir"]
+    if not os.path.exists(p):
+        os.makedirs(p)
+    return p
 
 @cache
 def getObjectsOfModule(module):
