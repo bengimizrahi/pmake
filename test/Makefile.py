@@ -45,6 +45,12 @@ def getConfigurationBuildDirectoryPath(configName):
     return p
 
 @cache
+def getArchives():
+    archives = [os.path.join(
+        getConfigurationBuildDirectoryPath(activeConfiguration),
+        getModuleDirectory(m))] for m in modules]
+    return archives
+
 @cache
 def getObjectsOfModule(module):
     objects = []
