@@ -81,8 +81,7 @@ def makeModule(target):
     archive = os.path.join(
         getBuildConfigurationDirectoryPath(activeConfiguration),
         target, "lib%s.a" % target)
-    link(linker=linker,
-        objects=getObjectsOfModule(target)
+    archive(objects=getObjectsOfModule(target)
         archive=archive)
 
 for m in modules:

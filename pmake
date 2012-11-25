@@ -169,8 +169,8 @@ def compilee(**kwargs):
     defaults={
         "linker": DEFAULT_LINKER,
     })
-def link(**kwargs):
-    linker = kwargs["linker"]
+def archive(**kwargs):
+    archiver = kwargs["archiver"]
     archiveFile = kwargs["archive"]
     objectFiles = kwargs["objects"]
     cmd = [linker, "cr", archiveFile] + objectFiles
