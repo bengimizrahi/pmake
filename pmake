@@ -180,9 +180,9 @@ def archive(**kwargs):
     return runShellCommand(cmd, verbose=True)
 
 @validate(
-    require=["archives", "executable"]
+    require=["archives", "executable"],
     defaults={
-        "linker": DEFAULT_LINKER
+        "linker": DEFAULT_LINKER,
         "libpaths": [],
         "libraries": [],
     })
