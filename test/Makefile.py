@@ -108,11 +108,11 @@ for m in modules:
             depend=depend)
 
 # Rules for cleaning
-@rule("clean", "clean_" + applicationName)
+@rule(Phony("clean"), "clean_" + applicationName)
 def makeClean(target):
     pass
 
-@rule("clean_" + applicationName,
+@rule(Phony("clean_" + applicationName),
     ["clean_" + m for m in list(modules)])
 def makeCleanApp(target):
     pass
