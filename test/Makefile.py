@@ -40,14 +40,15 @@ def getConfigurationBuildDirectoryPath(configName):
     return getBuildDirectoryPath() + \
         configurations[configName]["buildsubdir"]
 
-def getObjectsOfModule(module, filterQuery=None):
+def getObjectsOfModule(module):
     objects = []
-    if filterQuery:
-        filterQuery.replace("?", "absf")
+    query = module.get["sourcefilter"]
+    if query:
+        query.replace("?", "absf")
     for rootDir, subdirs, files in os.walk(module["directory"]):
         for f in files:
             absf = os.path.join(rootDir, f)
-            if filterQuery and not eval(filterQuery):
+            if query and not eval(query):
                 continue
             objects.append(absf)
     return objects
