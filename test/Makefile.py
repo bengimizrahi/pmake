@@ -114,7 +114,9 @@ def makeClean(target):
 @rule(Phony("clean_" + applicationName),
     ["clean_" + m for m in list(modules)])
 def makeCleanApp(target):
-    pass
+    os.remove(os.path.join(
+        getBuildConfigurationDirectoryPath(activeConfiguration), 
+        applicationName))
 
 @rule(["clean_" + m for m in list(modules)])
 def makeCleanModule(target):
