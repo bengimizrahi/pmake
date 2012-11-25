@@ -4,6 +4,7 @@
 
 import subprocess, select
 import os, sys
+from functools import wraps
 
 COLORS = {"blue": "\033[1;34m", "default": "\x1B[m", "yellow": "\033[1;33m",
     "magenda": "\033[1;31m", "white": "\033[1;37m", "green": "\033[1;32m",
@@ -82,12 +83,14 @@ def rule(targets, prerequisites=None, *args, **kwargs):
 
 def cache(f):
     results = {}
+    @wraps(f)
     def newf(*args):
         return results.setdefault("|".join(args), f(*args))
     return newf
 
 def validate(require, defaults):
     def validateDecorator(f):
+        @wraps(f)
         def newf(**kwargs):
             missingRequiredArgs = filter(
                 lambda r: not r in kwargs, require)
