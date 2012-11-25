@@ -45,6 +45,7 @@ def getConfigurationBuildDirectoryPath(configName):
     return p
 
 @cache
+@cache
 def getObjectsOfModule(module):
     objects = []
     query = module.get["sourcefilter"]
