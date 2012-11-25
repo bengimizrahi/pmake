@@ -87,16 +87,16 @@ def makeModule(target):
 
 for m in modules:
     @rule(getObjectsOfModule(m), getDependsOfObject, m)
-    def makeObject(target, m):
+    def makeObject(target, module):
         prefix = os.path.splitext(target)[0]
         source = prefix + ".c"
         compilee(compiler=compiler,
-            includePaths=m["incpaths"],
+            includePaths=module["incpaths"],
             source=source,
             object=target)
         depend = prefix + ".d"
         makeDepend(compiler=compiler,
-            includePaths=m["incpaths"],
+            includePaths=module["incpaths"],
             source=source,
             depend=depend)
 
