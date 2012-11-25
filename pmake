@@ -167,13 +167,13 @@ def compilee(**kwargs):
 @validate(
     require=["archive", "objects"],
     defaults={
-        "linker": DEFAULT_ARCHIVER,
+        "archiver": DEFAULT_ARCHIVER,
     })
 def archive(**kwargs):
     archiver = kwargs["archiver"]
     archiveFile = kwargs["archive"]
     objectFiles = kwargs["objects"]
-    cmd = [linker, "cr", archiveFile] + objectFiles
+    cmd = [archiver, "cr", archiveFile] + objectFiles
     return runShellCommand(cmd, verbose=True)
 
 def getRootDirectoryPath():
