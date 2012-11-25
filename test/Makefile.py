@@ -90,8 +90,9 @@ def makeAll(target):
 @rule(applicationName, [Phony(m) for m in list(modules))
 def makeApp(target):
     archives = getArchives()
-    link(archives=archives,
-         executable=applicationName)
+    link(libraries=archives + libraries,
+        libpaths=libraryPaths,
+        executable=applicationName)
 
 @rule(list(modules), getObjectsOfModule)
 def makeModule(target):
