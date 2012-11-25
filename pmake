@@ -176,6 +176,24 @@ def archive(**kwargs):
     cmd = [archiver, "cr", archiveFile] + objectFiles
     return runShellCommand(cmd, verbose=True)
 
+@validate(
+    require=["archives", "executable"]
+    defaults={
+        "linker": DEFAULT_LINKER
+        "libpaths": [],
+        "libraries": [],
+    })
+def link(**kwargs):
+    linker = kwargs["linker"]
+    libraryPaths = kwargs["libpaths"]
+    libraries = kwargs["libraries"]
+    executable = kwargs["executable"]
+    cmd = [linker] + \
+        ["-L%s" % p for p in libraryPaths] + \
+        ["-l%s" % l for l in libraries] + \
+        ["-o", executable]
+    return runShellCommand(cmd, verbose=True)
+
 def getRootDirectoryPath():
     return os.getcwd()
 
