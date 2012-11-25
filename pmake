@@ -82,8 +82,8 @@ def rule(targets, prerequisites=None, *args, **kwargs):
 
 def cache(f):
     results = {}
-    def newf(arg):
-        return results.setdefault(arg, f(arg))
+    def newf(*args):
+        return results.setdefault("|".join(args), f(*args))
     return newf
 
 def validate(require, defaults):
