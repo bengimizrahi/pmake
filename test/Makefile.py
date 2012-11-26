@@ -97,6 +97,7 @@ def makeAll(target):
 
 @rule(applicationName, list(modules))
 def makeApp(target):
+    print "--- Link '%s' ---" % applicationName
     archivePaths = getArchivePaths()
     exePath = os.path.join(
 	getBuildConfigurationDirectoryPath(activeConfiguration), applicationName)
@@ -108,6 +109,7 @@ def makeApp(target):
 
 @rule([Phony(m) for m in list(modules)], getObjectsOfModule)
 def makeModule(target):
+    print "--- Generate archive '%s' --- " % target
     archiveFile = os.path.join(
         getBuildConfigurationDirectoryPath(activeConfiguration),
         target, "lib%s.a" % target)
