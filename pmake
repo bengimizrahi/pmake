@@ -139,10 +139,11 @@ def runShellCommand(cmd, **kwargs):
     })
 def makeDepend(**kwargs):
     compiler = kwargs["compiler"]
-    includePaths = kwargs["includePaths"]
+    includePaths = kwargs["includePaths"][:]
     dependFile = kwargs["depend"]
     if not "-I." in includePaths:
-        includePaths.append("-I.")
+        includePaths.append(".")
+    includePaths = ["-I" + i for i in includePaths]
     defines = kwargs["defines"]
     sourceFile = kwargs["source"]
     cmd = [compiler, "-MM"] + includePaths + \
@@ -158,9 +159,10 @@ def makeDepend(**kwargs):
     })
 def compilee(**kwargs):
     compiler = kwargs["compiler"]
-    includePaths = kwargs["includePaths"]
+    includePaths = kwargs["includePaths"][:]
     if not "-I." in includePaths:
-        includePaths.append("-I.")
+        includePaths.append(".")
+    includePaths = ["-I" + i for i in includePaths]
     defines = kwargs["defines"]
     objectFile = kwargs["object"]
     sourceFile = kwargs["source"]
