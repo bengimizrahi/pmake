@@ -101,6 +101,10 @@ def makeAll(target):
 
 @rule(applicationName, list(modules))
 def makeApp(target):
+    pass
+
+@rule(list(modules), getArchiveOfModule)
+def makeApp(target):
     print "--- Link '%s' ---" % applicationName
     archivePaths = getArchivePaths()
     exePath = os.path.join(
@@ -112,7 +116,8 @@ def makeApp(target):
     if rt: return rt
     runShellCommand(["cp", exePath, "."], verbose=True)
 
-@rule([Phony(m) for m in list(modules)], getObjectsOfModule)
+@rule([Phony(getArchiveOfModule(m)) for m in list(modules)],
+    getObjectsOfModule, m)
 def makeModule(target):
     print "--- Generate archive '%s' --- " % target
     archiveFile = os.path.join(
