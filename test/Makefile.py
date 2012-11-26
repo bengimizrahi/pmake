@@ -80,19 +80,14 @@ import string
 
 @cache
 def getDependsOfObject(objectFile):
-    print "objectFile=", objectFile
     dependPath = os.path.join(
         os.path.splitext(objectFile)[0] + ".d")
-    print "dependPath=", dependPath
     if not os.path.exists(dependPath):
-	print "dependPath not exists, return []"
         return []
     with file(dependPath) as f:
-	print "with file(%s)" % dependPath
         trans = string.maketrans('\\\n', '  ')
         _, _, d = (t.strip() for t in
             f.read().translate(trans).strip().partition(":"))
-	print "d=", d
         return d.split()
 
 # Rules for building
