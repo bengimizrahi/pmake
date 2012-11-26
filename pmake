@@ -100,7 +100,7 @@ def validate(require, defaults):
                     ", ".join(missingRequiredArgs)
                 return False
             missingOptionalArgs = filter(
-                lambda o: not o in kwargs, defaults)
+                lambda o: (not o in kwargs) or not kwargs.get(o), defaults)
             for o in missingOptionalArgs:
                 kwargs[o] = defaults[o]
             return f(**kwargs)
