@@ -69,7 +69,7 @@ class Rule(object):
                             os.path.getmtime(self.target) < os.path.getmtime(p):
                         dirtyFiles.append(p)
                         shouldRunRecipe = True
-        if SHOW_DIRTY_DEPENDENCIES and dirtyFiles:
+        if SHOW_DIRTY_DEPENDENCIES:
                 print "%(yellow)s%%s%(default)s" % COLORS % "%s <- %s" % (
                     self.target, dirtyFiles)
         if shouldRunRecipe:
