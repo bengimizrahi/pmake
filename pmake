@@ -50,7 +50,8 @@ class Rule(object):
         if type(self.prerequisites) == str:
             prerequisites = [self.prerequisites]
         elif callable(self.prerequisites):
-            prerequisites = self.prerequisites(self.target)
+            prerequisites = self.prerequisites(
+                self.target, *self.args, **self.kwargs)
         if DEBUG_LOGS: print "prerequisites: %s" % prerequisites
         if not prerequisites:
             shouldRunRecipe = True
