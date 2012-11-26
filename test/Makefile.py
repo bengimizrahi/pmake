@@ -145,13 +145,19 @@ def makeClean(target):
 @rule(Phony("clean_" + applicationName),
     ["clean_" + m for m in list(modules)])
 def makeCleanApp(target):
-    os.remove(os.path.join(
-        getBuildConfigurationDirectoryPath(activeConfiguration), 
-        applicationName))
+    try:
+	os.remove(os.path.join(
+	    getBuildConfigurationDirectoryPath(activeConfiguration),
+	    applicationName))
+    except OSError:
+	pass
 
 for m in modules:
     @rule(Phony("clean_" + m), None, m)
     def makeCleanModule(target, module):
-        shutil.rmtree(os.path.join(
-            getBuildConfigurationDirectoryPath(activeConfiguration),
-            getModuleDirectory()))
+	try:
+	    shutil.rmtree(os.path.join(
+		getBuildConfigurationDirectoryPath(activeConfiguration),
+		getModuleDirectory(module)))
+	except OSError:
+	    pass
