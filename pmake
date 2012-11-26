@@ -17,6 +17,9 @@ DEFAULT_COMPILER = "gcc"
 DEFAULT_ARCHIVER = "ar"
 DEFAULT_LINKER = "gcc"
 
+DEBUG_LOGS = True
+SHOW_DIRTY_DEPENDENCIES = True
+
 rules = {}
 
 Phony = namedtuple("Phony", "target")
@@ -38,6 +41,7 @@ class Rule(object):
             self.prerequisites, self.recipe.__name__, self.args,
             self.kwargs)
     def make(self):
+        if DEBUG_LOGS: print "Making %s" % self
         shouldRunRecipe = False
         dirtyFiles = []
         if any(map(lambda t: type(self.prerequisites) == t,
@@ -47,6 +51,7 @@ class Rule(object):
             prerequisites = [self.prerequisites]
         elif callable(self.prerequisites):
             prerequisites = self.prerequisites(self.target)
+        if DEBUG_LOGS: print "prerequisites: %s" % prerequisites
         if not prerequisites:
             shouldRunRecipe = True
         else:
@@ -64,6 +69,9 @@ class Rule(object):
                             os.path.getmtime(self.target) < os.path.getmtime(p):
                         dirtyFiles.append(p)
                         shouldRunRecipe = True
+        if SHOW_DIRTY_DEPENDENCIES and dirtyFiles:
+                print "%(yellow)s%%s%(default)s" % COLORS % "%s <- %s" % (
+                    self.target, dirtyFiles)
         if shouldRunRecipe:
             rt = self.recipe(self.target, *self.args, **self.kwargs)
             if (rt is None) or (rt is 0):
@@ -71,6 +79,7 @@ class Rule(object):
             else:
                 exit(rt)
         else:
+            if DEBUG_LOGS: print "No need to make %s." % self.target
             return False
 
 
