@@ -183,7 +183,7 @@ def archive(**kwargs):
     return runShellCommand(cmd, verbose=True)
 
 @validate(
-    require=["archives", "executable"],
+    require=["libraries", "executable"],
     defaults={
         "linker": DEFAULT_LINKER,
         "libpaths": [],
