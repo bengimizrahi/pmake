@@ -24,7 +24,7 @@ modules = {
     "rrm" : {
 	"incpaths" : ["phy"]},
     "son" : {
-	"incpaths" : ["phy"]},
+	"incpaths" : ["phy", "rrm"]},
     "http" : {},
     "oam" : {
 	"incpaths" : ["soap"]},
