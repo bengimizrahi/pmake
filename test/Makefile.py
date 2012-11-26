@@ -100,7 +100,8 @@ def makeApp(target):
     print "--- Link '%s' ---" % applicationName
     archivePaths = getArchivePaths()
     exePath = os.path.join(
-	getBuildConfigurationDirectoryPath(activeConfiguration), applicationName)
+	getBuildConfigurationDirectoryPath(activeConfiguration),
+	applicationName)
     rt = link(libraries=list(modules) + libraries,
         libpaths=archivePaths + libraryPaths,
         executable=exePath)
@@ -125,7 +126,8 @@ for m in modules:
         prefix = os.path.splitext(target)[0]
 	depend = prefix + ".d"
 	source = prefix.partition(
-	    getBuildConfigurationDirectoryPath(activeConfiguration) + "/")[-1] + ".c"
+	    getBuildConfigurationDirectoryPath(activeConfiguration)
+	    + "/")[-1] + ".c"
 	if not os.path.exists(os.path.dirname(target)):
 	    os.makedirs(os.path.dirname(target))
         rt = compilee(compiler=compiler,
