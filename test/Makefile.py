@@ -37,9 +37,9 @@ def getModuleDirectory(moduleName):
     return modules.get("directory", moduleName)
 
 @cache
-def getBuildConfigurationDirectoryPath(configName):
+def getActiveBuildPath():
     p = os.path.join(buildDir,
-        configurations[configName]["buildsubdir"])
+        configurations[activeConfiguration]["buildsubdir"])
     if not os.path.exists(p):
         os.makedirs(p)
     return p
@@ -47,7 +47,7 @@ def getBuildConfigurationDirectoryPath(configName):
 @cache
 def getArchivePaths():
     archives = [os.path.join(
-        getBuildConfigurationDirectoryPath(activeConfiguration),
+        getActiveBuildPath(),
         getModuleDirectory(m)) for m in modules]
     return archives
 
@@ -55,7 +55,7 @@ def getArchivePaths():
 def getArchiveOfModule(moduleName):
     module = modules[moduleName]
     return os.path.join(
-	getBuildConfigurationDirectoryPath(activeConfiguration),
+        getActiveBuildPath(),
 	getModuleDirectory(moduleName),
 	"lib%s.a" % moduleName)
 
@@ -76,7 +76,7 @@ def getObjectsOfModule(moduleName):
 	    if not ext in (".c", ".cpp"):
 		continue
             objects.append(os.path.join(
-		getBuildConfigurationDirectoryPath(activeConfiguration),
+		getActiveBuildPath(),
 		basename + ".o"))
     return objects
 
@@ -108,7 +108,7 @@ def makeApp(target):
     print "--- Link '%s' ---" % applicationName
     archivePaths = getArchivePaths()
     exePath = os.path.join(
-	getBuildConfigurationDirectoryPath(activeConfiguration),
+	getActiveBuildPath(),
 	applicationName)
     rt = link(libraries=list(modules) + libraries,
         libpaths=archivePaths + libraryPaths,
@@ -121,7 +121,7 @@ def makeApp(target):
 def makeModule(target):
     print "--- Generate archive '%s' --- " % target
     archiveFile = os.path.join(
-        getBuildConfigurationDirectoryPath(activeConfiguration),
+	getActiveBuildPath(),
         target, "lib%s.a" % target)
     obj = getObjectsOfModule(target)
     rt = archive(objects=obj,
@@ -135,7 +135,7 @@ for m in modules:
         prefix = os.path.splitext(target)[0]
 	depend = prefix + ".d"
 	source = prefix.partition(
-	    getBuildConfigurationDirectoryPath(activeConfiguration)
+	    getActiveBuildPath(),
 	    + "/")[-1] + ".c"
 	if not os.path.exists(os.path.dirname(target)):
 	    os.makedirs(os.path.dirname(target))
@@ -162,7 +162,7 @@ import shutil
 def makeCleanApp(target):
     try:
 	os.remove(os.path.join(
-	    getBuildConfigurationDirectoryPath(activeConfiguration),
+	    getActiveBuildPath(),
 	    applicationName))
     except OSError:
 	pass
@@ -172,7 +172,7 @@ for m in modules:
     def makeCleanModule(target, module):
 	try:
 	    shutil.rmtree(os.path.join(
-		getBuildConfigurationDirectoryPath(activeConfiguration),
+		getActiveBuildPath(),
 		getModuleDirectory(module)))
 	except OSError:
 	    pass
