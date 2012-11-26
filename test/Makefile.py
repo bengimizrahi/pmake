@@ -1,6 +1,6 @@
 enableColor = True
-compiler = "g++"
-linker = "g++"
+compiler = "gcc"
+linker = "gcc"
 ar = "ar"
 commonCflags = ["-O3", "-Wall",]
 ldFlags = ["-Xlinker", "--start-group"]
@@ -40,10 +40,9 @@ def getModuleDirectory(moduleName):
 def getBuildDirectoryPath():
     return getRootDirectory() + buildDir
 
-@cache
-def getConfigurationBuildDirectoryPath(configName):
-    p = getBuildDirectoryPath() + \
-        configurations[configName]["buildsubdir"]
+def getBuildConfigurationDirectoryPath(configName):
+    p = os.path.join(buildDir,
+        configurations[configName]["buildsubdir"])
     if not os.path.exists(p):
         os.makedirs(p)
     return p
@@ -51,7 +50,7 @@ def getConfigurationBuildDirectoryPath(configName):
 @cache
 def getArchives():
     archives = [os.path.join(
-        getConfigurationBuildDirectoryPath(activeConfiguration),
+        getBuildConfigurationDirectoryPath(activeConfiguration),
         getModuleDirectory(m)) for m in modules]
     return archives
 
@@ -78,7 +77,7 @@ def getSourceOfObject(objectFile):
 @cache
 def getDependsOfObject(source):
     dependPath = os.path.join(
-        getConfigurationBuildDirectoryPath(activeConfiguration),
+        getBuildConfigurationDirectoryPath(activeConfiguration),
         os.path.splitext(source)[0] + ".d")
     if not os.path.exists(dependPath):
         return []
