@@ -109,7 +109,7 @@ def validate(require, defaults):
 
 def runShellCommand(cmd, **kwargs):
     if kwargs.get("verbose"):
-        print "%(white)%()s%(default)s" % COLORS % " ".join(cmd)
+        print "%(white)s%%s%(default)s" % COLORS % " ".join(cmd)
     process = subprocess.Popen(cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
@@ -121,10 +121,10 @@ def runShellCommand(cmd, **kwargs):
                 eof[fd] = True
                 continue
             if ": warning: " in line:
-                print "%(yellow)s%()s%(default)s" % COLORS % line
+                print "%(yellow)s%%s%(default)s" % COLORS % line
             elif any((s in line for s in
                     [": error: ", ": fatal error:"])):
-                print "%(red)s%()s%(default)s" % COLORS % line
+                print "%(red)s%%s%(default)s" % COLORS % line
             else:
                 print line
     process.communicate()
