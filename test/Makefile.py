@@ -142,6 +142,8 @@ for m in modules:
 def makeClean(target):
     pass
 
+import shutil
+
 @rule(Phony("clean_" + applicationName),
     ["clean_" + m for m in list(modules)])
 def makeCleanApp(target):
