@@ -52,16 +52,18 @@ def getConfigurationBuildDirectoryPath(configName):
 def getArchives():
     archives = [os.path.join(
         getConfigurationBuildDirectoryPath(activeConfiguration),
-        getModuleDirectory(m))] for m in modules]
+        getModuleDirectory(m)) for m in modules]
     return archives
 
 @cache
-def getObjectsOfModule(module):
+def getObjectsOfModule(moduleName):
     objects = []
-    query = module.get["sourcefilter"]
+    module = modules[moduleName]
+    moduleDirectory = module.get("directory", moduleName)
+    query = module.get("sourcefilter")
     if query:
         query.replace("?", "absf")
-    for rootDir, subdirs, files in os.walk(module["directory"]):
+    for rootDir, subdirs, files in os.walk(moduleDirectory):
         for f in files:
             absf = os.path.join(rootDir, f)
             if query and not eval(query):
@@ -103,7 +105,7 @@ def makeModule(target):
     archive = os.path.join(
         getBuildConfigurationDirectoryPath(activeConfiguration),
         target, "lib%s.a" % target)
-    archive(objects=getObjectsOfModule(target)
+    archive(objects=getObjectsOfModule(target),
         archive=archive)
 
 for m in modules:
