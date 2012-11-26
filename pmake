@@ -39,7 +39,8 @@ class Rule(object):
             self.kwargs)
     def make(self):
         shouldRunRecipe = False
-        if type(self.prerequisites) == list:
+        if any(map(lambda t: type(self.prerequisites) == t,
+                (list, type(None)))):
             prerequisites = self.prerequisites
         if type(self.prerequisites) == str:
             prerequisites = [self.prerequisites]
