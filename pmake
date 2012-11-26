@@ -60,7 +60,7 @@ class Rule(object):
                             os.path.getmtime(self.target) < os.path.getmtime(p):
                         shouldRunRecipe = True
         if shouldRunRecipe:
-            rt = self.recipe(target, *args, **kwargs)
+            rt = self.recipe(self.target, *self.args, **self.kwargs)
             if (rt is None) or (rt is 0):
                 return True
             else:
