@@ -80,10 +80,6 @@ def getObjectsOfModule(moduleName):
 		basename + ".o"))
     return objects
 
-@cache
-def getSourceOfObject(objectFile):
-    return os.path.splitext(objectFile)[0] + ".c"
-
 import string
 
 @cache
