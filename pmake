@@ -52,11 +52,11 @@ class Rule(object):
                 if p in rules:
                     if rules[p].make():
                         shouldRunRecipe = True
-                    elif not isinstance(self.target, Phony) and \
+                    elif not self.isPhony and \
                              os.path.getmtime(self.target) < os.path.getmtime(p):
                         shouldRunRecipe = True
                 else:
-                    if not isinstance(self.target, Phony) and \
+                    if not self.isPhony and \
                             os.path.getmtime(self.target) < os.path.getmtime(p):
                         shouldRunRecipe = True
         if shouldRunRecipe:
