@@ -39,6 +39,7 @@ class Rule(object):
             self.kwargs)
     def make(self):
         shouldRunRecipe = False
+        dirtyFiles = []
         if any(map(lambda t: type(self.prerequisites) == t,
                 (list, type(None)))):
             prerequisites = self.prerequisites
@@ -52,13 +53,16 @@ class Rule(object):
             for p in prerequisites:
                 if p in rules:
                     if rules[p].make():
+                        dirtyFiles.append(p)
                         shouldRunRecipe = True
                     elif not self.isPhony and \
                              os.path.getmtime(self.target) < os.path.getmtime(p):
+                        dirtyFiles.append(p)
                         shouldRunRecipe = True
                 else:
                     if not self.isPhony and \
                             os.path.getmtime(self.target) < os.path.getmtime(p):
+                        dirtyFiles.append(p)
                         shouldRunRecipe = True
         if shouldRunRecipe:
             rt = self.recipe(self.target, *self.args, **self.kwargs)
