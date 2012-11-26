@@ -37,9 +37,6 @@ def getModuleDirectory(moduleName):
     return modules.get("directory", moduleName)
 
 @cache
-def getBuildDirectoryPath():
-    return getRootDirectory() + buildDir
-
 def getBuildConfigurationDirectoryPath(configName):
     p = os.path.join(buildDir,
         configurations[configName]["buildsubdir"])
@@ -48,7 +45,7 @@ def getBuildConfigurationDirectoryPath(configName):
     return p
 
 @cache
-def getArchives():
+def getArchivePaths():
     archives = [os.path.join(
         getBuildConfigurationDirectoryPath(activeConfiguration),
         getModuleDirectory(m)) for m in modules]
@@ -67,7 +64,10 @@ def getObjectsOfModule(moduleName):
             absf = os.path.join(rootDir, f)
             if query and not eval(query):
                 continue
-            objects.append(absf)
+	    basename, ext = os.path.splitext(absf)
+	    if not ext in (".c", ".cpp"):
+		continue
+            objects.append(basename + ".o")
     return objects
 
 @cache
@@ -75,10 +75,10 @@ def getSourceOfObject(objectFile):
     return os.path.splitext(objectFile)[0] + ".c"
 
 @cache
-def getDependsOfObject(source):
+def getDependsOfObject(objectFile):
     dependPath = os.path.join(
         getBuildConfigurationDirectoryPath(activeConfiguration),
-        os.path.splitext(source)[0] + ".d")
+        os.path.splitext(objectFile)[0] + ".d")
     if not os.path.exists(dependPath):
         return []
     with file(dependPath) as f:
@@ -92,34 +92,49 @@ def getDependsOfObject(source):
 def makeAll(target):
     pass
 
-@rule(applicationName, [Phony(m) for m in list(modules)])
+@rule(applicationName, list(modules))
 def makeApp(target):
-    archives = getArchives()
-    link(libraries=archives + libraries,
-        libpaths=libraryPaths,
-        executable=applicationName)
+    archivePaths = getArchivePaths()
+    exePath = os.path.join(
+	getBuildConfigurationDirectoryPath(activeConfiguration), applicationName)
+    rt = link(libraries=list(modules) + libraries,
+        libpaths=archivePaths + libraryPaths,
+        executable=exePath)
+    if rt: return rt
+    runShellCommand(["cp", exePath, "."], verbose=True)
 
-@rule(list(modules), getObjectsOfModule)
+@rule([Phony(m) for m in list(modules)], getObjectsOfModule)
 def makeModule(target):
-    archive = os.path.join(
+    archiveFile = os.path.join(
         getBuildConfigurationDirectoryPath(activeConfiguration),
         target, "lib%s.a" % target)
-    archive(objects=getObjectsOfModule(target),
-        archive=archive)
+    obj = map(lambda o: os.path.join(
+	getBuildConfigurationDirectoryPath(activeConfiguration), o),
+	getObjectsOfModule(target))
+    rt = archive(objects=obj,
+        archive=archiveFile)
+    if rt: return rt
 
 for m in modules:
     @rule(getObjectsOfModule(m), getDependsOfObject, m)
-    def makeObject(target, module):
+    def makeObject(target, moduleName):
+	module = modules[moduleName]
         prefix = os.path.splitext(target)[0]
         source, depend = (prefix + ext for ext in (".c", ".d"))
-        compilee(compiler=compiler,
-            includePaths=module["incpaths"],
+	obj = os.path.join(
+	    getBuildConfigurationDirectoryPath(activeConfiguration), target)
+	if not os.path.exists(os.path.dirname(obj)):
+	    os.makedirs(os.path.dirname(obj))
+        rt = compilee(compiler=compiler,
+            includePaths=module.get("incpaths"),
             source=source,
-            object=target)
-        makeDepend(compiler=compiler,
-            includePaths=module["incpaths"],
+            object=obj)
+	if rt: return rt
+        rt = makeDepend(compiler=compiler,
+            includePaths=module.get("incpaths"),
             source=source,
             depend=depend)
+	if rt: return rt
 
 # Rules for cleaning
 @rule(Phony("clean"), "clean_" + applicationName)
