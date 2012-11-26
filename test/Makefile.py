@@ -52,6 +52,14 @@ def getArchivePaths():
     return archives
 
 @cache
+def getArchiveOfModule(moduleName):
+    module = modules[moduleName]
+    return os.path.join(
+	getBuildConfigurationDirectoryPath(activeConfiguration),
+	getModuleDirectory(moduleName),
+	"lib%s.a" % moduleName)
+
+@cache
 def getObjectsOfModule(moduleName):
     objects = []
     module = modules[moduleName]
