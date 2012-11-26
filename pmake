@@ -198,7 +198,7 @@ def link(**kwargs):
         ["-o", executable]
     return runShellCommand(cmd, verbose=True)
 
-def getRootDirectoryPath():
+def getRootDirectory():
     return os.getcwd()
 
 # ----------------- Makefile.py -----------------
