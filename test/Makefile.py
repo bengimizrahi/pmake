@@ -67,24 +67,32 @@ def getObjectsOfModule(moduleName):
 	    basename, ext = os.path.splitext(absf)
 	    if not ext in (".c", ".cpp"):
 		continue
-            objects.append(basename + ".o")
+            objects.append(os.path.join(
+		getBuildConfigurationDirectoryPath(activeConfiguration),
+		basename + ".o"))
     return objects
 
 @cache
 def getSourceOfObject(objectFile):
     return os.path.splitext(objectFile)[0] + ".c"
 
+import string
+
 @cache
 def getDependsOfObject(objectFile):
+    print "objectFile=", objectFile
     dependPath = os.path.join(
-        getBuildConfigurationDirectoryPath(activeConfiguration),
         os.path.splitext(objectFile)[0] + ".d")
+    print "dependPath=", dependPath
     if not os.path.exists(dependPath):
+	print "dependPath not exists, return []"
         return []
     with file(dependPath) as f:
+	print "with file(%s)" % dependPath
         trans = string.maketrans('\\\n', '  ')
         _, _, d = (t.strip() for t in
             f.read().translate(trans).strip().partition(":"))
+	print "d=", d
         return d.split()
 
 # Rules for building
@@ -108,9 +116,7 @@ def makeModule(target):
     archiveFile = os.path.join(
         getBuildConfigurationDirectoryPath(activeConfiguration),
         target, "lib%s.a" % target)
-    obj = map(lambda o: os.path.join(
-	getBuildConfigurationDirectoryPath(activeConfiguration), o),
-	getObjectsOfModule(target))
+    obj = getObjectsOfModule(target)
     rt = archive(objects=obj,
         archive=archiveFile)
     if rt: return rt
@@ -120,15 +126,15 @@ for m in modules:
     def makeObject(target, moduleName):
 	module = modules[moduleName]
         prefix = os.path.splitext(target)[0]
-        source, depend = (prefix + ext for ext in (".c", ".d"))
-	obj = os.path.join(
-	    getBuildConfigurationDirectoryPath(activeConfiguration), target)
-	if not os.path.exists(os.path.dirname(obj)):
-	    os.makedirs(os.path.dirname(obj))
+	depend = prefix + ".d"
+	source = prefix.partition(
+	    getBuildConfigurationDirectoryPath(activeConfiguration) + "/")[-1] + ".c"
+	if not os.path.exists(os.path.dirname(target)):
+	    os.makedirs(os.path.dirname(target))
         rt = compilee(compiler=compiler,
             includePaths=module.get("incpaths"),
             source=source,
-            object=obj)
+            object=target)
 	if rt: return rt
         rt = makeDepend(compiler=compiler,
             includePaths=module.get("incpaths"),
