@@ -46,7 +46,7 @@ def getActiveBuildPath():
     return p
 
 @cache
-def getExecutablePath()
+def getExecutablePath():
     return os.path.join(getActiveBuildPath(), executableName)
 
 # Example:
@@ -75,7 +75,7 @@ def makeProgram(target):
 @cache
 def getModuleOutputPath(moduleName):
     return os.path.join(
-	getActiveBuildPath(), getModuleDirectory(), "lib%s.a" %
+	getActiveBuildPath(), getModuleDirectory(moduleName), "lib%s.a" %
 	moduleName)
 
 
@@ -84,8 +84,8 @@ def makeExecutable(target):
     moduleOutputDirs = [os.path.join(getActiveBuildPath(),
 	getModuleDirectory(m)) for m in modules]
     rt = link(
-	libpaths=libraryPaths + moduleOutputDirs
-	libraries=libraries + list(modules)
+	libpaths=libraryPaths + moduleOutputDirs,
+	libraries=libraries + list(modules),
 	executable=getExecutablePath())
     if rt: return rt
 
@@ -158,7 +158,7 @@ def getDepends(objectFile, moduleName):
         return d.split()
 
 for m in modules:
-    @rule(getObjects(m), getDepends, m)
+    @rule(getObjects1(m), getDepends, m)
     def makeObject(target, moduleName):
 	module = modules[moduleName]
         prefix = os.path.splitext(target)[0]
