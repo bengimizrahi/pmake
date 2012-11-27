@@ -8,8 +8,8 @@ from functools import wraps
 from collections import namedtuple
 import pprint
 
-DEBUG_LOGS = True
-SHOW_DIRTY_DEPENDENCIES = True
+DEBUG_LOGS = False
+SHOW_DIRTY_DEPENDENCIES = False
 DUMP_RULES = False
 
 COLORS = {"blue": "\033[1;34m", "default": "\x1B[m", "yellow": "\033[1;33m",
