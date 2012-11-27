@@ -210,6 +210,8 @@ def makeCleanApp(target):
 
 for m in modules:
     @rule(Phony("clean_" + m), None, m)
-    def makeCleanModule(target, module):
-	rt = runShellCommand(["rm", "-rf", getModuleOutputPath(m)])
+    def makeCleanModule(target, moduleName):
+	rt = runShellCommand(["rm", "-rf", os.path.join(
+	    getActiveBuildPath(), getModuleDirectory(moduleName))],
+	    verbose=True)
 	if rt: return rt
