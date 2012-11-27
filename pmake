@@ -61,10 +61,12 @@ class Rule(object):
                     if rules[p].make():
                         dirtyFiles.append(p)
                         shouldRunRecipe = True
-                    elif not self.isPhony and \
-                             os.path.getmtime(self.target) < os.path.getmtime(p):
-                        dirtyFiles.append(p)
-                        shouldRunRecipe = True
+                    elif not self.isPhony:
+                        if not os.path.exists(self.target):
+                            shouldRunRecipe = True
+                        elif os.path.getmtime(self.target) < os.path.getmtime(p):
+                            dirtyFiles.append(p)
+                            shouldRunRecipe = True
                 else:
                     if not self.isPhony and \
                             os.path.getmtime(self.target) < os.path.getmtime(p):
