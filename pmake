@@ -190,12 +190,7 @@ def buildDepend(**kwargs):
     return compilee(**kwargs)
 
 @validate(
-    require=["object", "source"],
-    defaults={
-        "compiler": DEFAULT_COMPILER,
-        "includePaths": [],
-        "defines": [],
-    })
+    require=["object", "source"])
 def buildObject(**kwargs):
     kwargs["compilerFlags"] = []
     kwargs["output"] = kwargs["object"]
