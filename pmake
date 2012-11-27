@@ -234,6 +234,12 @@ if __name__ == "__main__":
     if not enableColor:
         COLORS = NOCOLORS
 
+    if DEBUG_LOGS:
+        print "All rules are:"
+        from pprint import pprint
+        pprint(rules.values())
+        print
+
     # Get the target
     target = "all"
     if len(sys.argv) == 2:
