@@ -198,12 +198,8 @@ import shutil
 @rule(Phony("clean_" + program),
     ["clean_" + m for m in list(modules)])
 def makeCleanApp(target):
-    try:
-	os.remove(os.path.join(
-	    getActiveBuildPath(),
-	    getExecutablePath()))
-    except OSError:
-	pass
+    rt = runShellCommand(["rm", "-rf", getExecutablePath()], verbose=True)
+    if rt: return rt
 
 # Example:
 # --------
@@ -215,9 +211,5 @@ def makeCleanApp(target):
 for m in modules:
     @rule(Phony("clean_" + m), None, m)
     def makeCleanModule(target, module):
-	try:
-	    shutil.rmtree(os.path.join(
-		getActiveBuildPath(),
-		getModuleDirectory(module)))
-	except OSError:
-	    pass
+	rt = runShellCommand(["rm", "-rf", getModuleOutputPath(m)])
+	if rt: return rt
