@@ -30,7 +30,8 @@ modules = {
 	"incpaths" : ["soap"]},
     "phy" : {},
 }
-applicationName = "fap." + activeConfiguration
+program = "fap"
+executableName = program + "." + activeConfiguration
 
 @cache
 def getModuleDirectory(moduleName):
@@ -45,22 +46,68 @@ def getActiveBuildPath():
     return p
 
 @cache
-def getArchivePaths():
-    archives = [os.path.join(
-        getActiveBuildPath(),
-        getModuleDirectory(m)) for m in modules]
-    return archives
+def getExecutablePath()
+    return os.path.join(getActiveBuildPath(), executableName)
+
+# Example:
+# --------
+# .PHONY: all
+# all: fap
+
+@rule(Phony("all"), program)
+def makeAll(target):
+    pass
+
+# Example:
+# --------
+# .PHONY: fap
+# fap: ./build/Debug/fap.debug
+
+@rule(Phony(program), getExecutablePath())
+def makeProgram(target):
+    runShellCommand(["cp", getExecutablePath(), "."])
+
+# Example:
+# --------
+# ./build/Debug/fap.debug: ./build/Debug/oam/liboam.a \
+#     ./build/Debug/rrm/librrm.a ...
 
 @cache
-def getArchiveOfModule(moduleName):
-    module = modules[moduleName]
+def getModuleOutputPath(moduleName):
     return os.path.join(
-        getActiveBuildPath(),
-	getModuleDirectory(moduleName),
-	"lib%s.a" % moduleName)
+	getActiveBuildPath(), getModuleDirectory(), "lib%s.a" %
+	moduleName)
+
+
+@rule(getExecutablePath(), [getModuleOutputPath(m) for m in list(modules)])
+def makeExecutable(target):
+    moduleOutputDirs = [os.path.join(getActiveBuildPath(),
+	getModuleDirectory(m)) for m in modules]
+    rt = link(
+	libpaths=libraryPaths + moduleOutputDirs
+	libraries=libraries + list(modules)
+	executable=getExecutablePath())
+    if rt: return rt
+
+# Example:
+# --------
+# (Repeat the following for each module name (oam, rrm, ...))
+# .PHONY: oam
+# oam: ./build/Debug/oam/liboam.a
+# ...
+
+@rule([Phony(m) for m in list(modules)], getModuleOutputPath)
+def makeModule(target):
+    pass
+
+# Example:
+# --------
+# (Repeat the following for each module name (oam, rrm, ...))
+# .build/Debug/oam/liboam.a: .build/Debug/oam/oam.o \
+#     .build/Debug/oam/dataModel.o ...
 
 @cache
-def getObjectsOfModule(moduleName):
+def getObjects2(_, moduleName):
     objects = []
     module = modules[moduleName]
     moduleDirectory = module.get("directory", moduleName)
@@ -72,18 +119,34 @@ def getObjectsOfModule(moduleName):
             absf = os.path.join(rootDir, f)
             if query and not eval(query):
                 continue
-	    basename, ext = os.path.splitext(absf)
+	    basePath, ext = os.path.splitext(absf)
 	    if not ext in (".c", ".cpp"):
 		continue
             objects.append(os.path.join(
 		getActiveBuildPath(),
-		basename + ".o"))
+		basePath + ".o"))
     return objects
+
+def getObjects1(moduleName):
+    return getObjects2(None, moduleName)
+
+for m in modules:
+    @rule(getModuleOutputPath(m), getObjects2, m)
+    def makeModule(target, moduleName):
+	rt = archive(objects=getObjects1(moduleName),
+	    archive=target)
+	if rt: return rt
+
+# Example:
+# --------
+# Repeat the following for each object in each module:
+# .build/Debug/oam/oam.o: oam/oam.c oam/oam.h soap/soap.h ...
+#     gcc -o .build/Debug/oam/oam.o -c oam/oam.c ...
 
 import string
 
 @cache
-def getDependsOfObject(objectFile):
+def getDepends(objectFile, moduleName):
     dependPath = os.path.join(
         os.path.splitext(objectFile)[0] + ".d")
     if not os.path.exists(dependPath):
@@ -94,49 +157,14 @@ def getDependsOfObject(objectFile):
             f.read().translate(trans).strip().partition(":"))
         return d.split()
 
-# Rules for building
-@rule(Phony("all"), applicationName)
-def makeAll(target):
-    pass
-
-@rule(applicationName, list(modules))
-def makeApp(target):
-    pass
-
-@rule(list(modules), getArchiveOfModule)
-def makeApp(target):
-    print "--- Link '%s' ---" % applicationName
-    archivePaths = getArchivePaths()
-    exePath = os.path.join(
-	getActiveBuildPath(),
-	applicationName)
-    rt = link(libraries=list(modules) + libraries,
-        libpaths=archivePaths + libraryPaths,
-        executable=exePath)
-    if rt: return rt
-    runShellCommand(["cp", exePath, "."], verbose=True)
-
-@rule([Phony(getArchiveOfModule(m)) for m in list(modules)],
-    getObjectsOfModule, m)
-def makeModule(target):
-    print "--- Generate archive '%s' --- " % target
-    archiveFile = os.path.join(
-	getActiveBuildPath(),
-        target, "lib%s.a" % target)
-    obj = getObjectsOfModule(target)
-    rt = archive(objects=obj,
-        archive=archiveFile)
-    if rt: return rt
-
 for m in modules:
-    @rule(getObjectsOfModule(m), getDependsOfObject, m)
+    @rule(getObjects(m), getDepends, m)
     def makeObject(target, moduleName):
 	module = modules[moduleName]
         prefix = os.path.splitext(target)[0]
 	depend = prefix + ".d"
 	source = prefix.partition(
-	    getActiveBuildPath(),
-	    + "/")[-1] + ".c"
+	    getActiveBuildPath() + "/")[-1] + ".c"
 	if not os.path.exists(os.path.dirname(target)):
 	    os.makedirs(os.path.dirname(target))
         rt = compilee(compiler=compiler,
@@ -150,22 +178,39 @@ for m in modules:
             depend=depend)
 	if rt: return rt
 
-# Rules for cleaning
-@rule(Phony("clean"), "clean_" + applicationName)
+# Example:
+# --------
+# .PHONY: clean
+# clean: clean_fap
+
+@rule(Phony("clean"), "clean_" + program)
 def makeClean(target):
     pass
 
+# Example:
+# --------
+# .PHONY: clean_fap
+# clean_fap: clean_oam clean_rrm ...
+#     rm .build/Debug/fap.debug
+
 import shutil
 
-@rule(Phony("clean_" + applicationName),
+@rule(Phony("clean_" + program),
     ["clean_" + m for m in list(modules)])
 def makeCleanApp(target):
     try:
 	os.remove(os.path.join(
 	    getActiveBuildPath(),
-	    applicationName))
+	    getExecutablePath()))
     except OSError:
 	pass
+
+# Example:
+# --------
+# (Repeat the following for each module name (oam, rrm, ...))
+# .PHONY: clean_oam
+# clean_oam:
+#     rm -rf .build/Debug/oam
 
 for m in modules:
     @rule(Phony("clean_" + m), None, m)
