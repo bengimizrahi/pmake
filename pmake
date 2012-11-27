@@ -103,7 +103,8 @@ def cache(f):
     results = {}
     @wraps(f)
     def newf(*args):
-        return results.setdefault("|".join(args), f(*args))
+        _args = map(lambda a: a or "", args)
+        return results.setdefault("|".join(_args), f(*args))
     return newf
 
 def validate(require, defaults):
