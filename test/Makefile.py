@@ -167,12 +167,12 @@ for m in modules:
 	    getActiveBuildPath() + "/")[-1] + ".c"
 	if not os.path.exists(os.path.dirname(target)):
 	    os.makedirs(os.path.dirname(target))
-        rt = compilee(compiler=compiler,
+        rt = buildObject(compiler=compiler,
             includePaths=module.get("incpaths"),
             source=source,
             object=target)
 	if rt: return rt
-        rt = makeDepend(compiler=compiler,
+        rt = buildDepend(compiler=compiler,
             includePaths=module.get("incpaths"),
             source=source,
             depend=depend)

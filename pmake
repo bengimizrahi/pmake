@@ -158,24 +158,36 @@ def runShellCommand(cmd, **kwargs):
     return process.returncode and True or False
 
 @validate(
-    require=["depend", "source"],
+    require=["compilerFlags", "source", "output"],
     defaults={
         "compiler": DEFAULT_COMPILER,
         "includePaths": [],
         "defines": [],
+        "cFlags": [],
+        "verbose": False,
     })
-def makeDepend(**kwargs):
+def compilee(**kwargs):
     compiler = kwargs["compiler"]
+    compilerFlags = kwargs["compilerFlags"]
+    outputFile = kwargs["output"]
     includePaths = kwargs["includePaths"][:]
-    dependFile = kwargs["depend"]
     if not "-I." in includePaths:
         includePaths.append(".")
     includePaths = ["-I" + i for i in includePaths]
-    defines = kwargs["defines"]
+    cFlags = kwargs["cFlags"]
+    defines = ["-D" + d for d in kwargs["defines"]]
     sourceFile = kwargs["source"]
-    cmd = [compiler, "-MM"] + includePaths + \
-        defines + [sourceFile] + ["-o", dependFile]
-    return runShellCommand(cmd, verbose=False)
+    print compiler, compilerFlags, includePaths, cFlags, defines
+    cmd = [compiler] + compilerFlags + includePaths + \
+        cFlags + defines + ["-c", sourceFile] + ["-o", outputFile]
+    return runShellCommand(cmd, verbose=kwargs["verbose"])
+
+@validate(
+    require=["depend", "source"])
+def buildDepend(**kwargs):
+    kwargs["compilerFlags"] = ["-MM"]
+    kwargs["output"] = kwargs["depend"]
+    return compilee(**kwargs)
 
 @validate(
     require=["object", "source"],
@@ -184,18 +196,11 @@ def makeDepend(**kwargs):
         "includePaths": [],
         "defines": [],
     })
-def compilee(**kwargs):
-    compiler = kwargs["compiler"]
-    includePaths = kwargs["includePaths"][:]
-    if not "-I." in includePaths:
-        includePaths.append(".")
-    includePaths = ["-I" + i for i in includePaths]
-    defines = kwargs["defines"]
-    objectFile = kwargs["object"]
-    sourceFile = kwargs["source"]
-    cmd = [compiler] + includePaths + \
-        defines + ["-c", sourceFile] + ["-o", objectFile]
-    return runShellCommand(cmd, verbose=True)
+def buildObject(**kwargs):
+    kwargs["compilerFlags"] = []
+    kwargs["output"] = kwargs["object"]
+    kwargs["verbose"] = True
+    return compilee(**kwargs)
 
 @validate(
     require=["archive", "objects"],
