@@ -115,7 +115,7 @@ def cache(f):
         return results.setdefault("|".join(_args), f(*args))
     return newf
 
-def validate(require, defaults):
+def validate(require, defaults=None):
     def validateDecorator(f):
         @wraps(f)
         def newf(**kwargs):
@@ -125,10 +125,11 @@ def validate(require, defaults):
                 print "Error: function %s requires: %s" % (f,
                     ", ".join(missingRequiredArgs))
                 return False
-            missingOptionalArgs = filter(
-                lambda o: (not o in kwargs) or not kwargs.get(o), defaults)
-            for o in missingOptionalArgs:
-                kwargs[o] = defaults[o]
+            if defaults:
+                missingOptionalArgs = filter(
+                    lambda o: (not o in kwargs) or not kwargs.get(o), defaults)
+                for o in missingOptionalArgs:
+                    kwargs[o] = defaults[o]
             return f(**kwargs)
         return newf
     return validateDecorator
