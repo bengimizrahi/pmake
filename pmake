@@ -215,15 +215,18 @@ def archive(**kwargs):
         "linker": DEFAULT_LINKER,
         "libpaths": [],
         "libraries": [],
+        "ldFlags": [],
     })
 def link(**kwargs):
     linker = kwargs["linker"]
     libraryPaths = kwargs["libpaths"]
     libraries = kwargs["libraries"]
     executable = kwargs["executable"]
+    ldFlags = kwargs["ldFlags"]
     cmd = [linker] + \
         ["-L%s" % p for p in libraryPaths] + \
         ["-l%s" % l for l in libraries] + \
+        ldFlags + \
         ["-o", executable]
     return runShellCommand(cmd, verbose=True)
 
