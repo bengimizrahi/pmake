@@ -242,8 +242,7 @@ if __name__ == "__main__":
 
     if DUMP_RULES:
         print "All rules are:"
-        from pprint import pprint
-        pprint(rules.values())
+        pprint.pprint(rules.values())
         print
 
     # Get the target
