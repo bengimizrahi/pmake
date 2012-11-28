@@ -7,10 +7,14 @@ import os, sys
 from functools import wraps
 from collections import namedtuple
 import pprint
+import inspect
+
+enableColor = True
 
 DEBUG_LOGS = False
 SHOW_DIRTY_DEPENDENCIES = False
 DUMP_RULES = False
+PREVIEW_BUILD = True
 
 COLORS = {"blue": "\033[1;34m", "default": "\x1B[m", "yellow": "\033[1;33m",
     "magenda": "\033[1;31m", "white": "\033[1;37m", "green": "\033[1;32m",
@@ -23,24 +27,33 @@ DEFAULT_ARCHIVER = "ar"
 DEFAULT_LINKER = "gcc"
 
 rules = {}
+phonies = set()
 
-Phony = namedtuple("Phony", "target")
+class cd(object):
+    def __init__(self, path):
+        self.path = path
+    def __enter__(self):
+        print "%(white)s%%s%(default)s" % COLORS % "cd %s" % self.path
+        self.savedPath = os.getcwd()
+        os.chdir(self.path)
+    def __exit__(self, errorType, value, traceback):
+        print "%(white)s%%s%(default)s" % COLORS % "cd %s" % self.savedPath
+        os.chdir(self.savedPath)
+
+def Phony(target):
+    phonies.add(target)
 
 class Rule(object):
     def __init__(self, target, prerequisites, recipe, args, kwargs):
-        if type(target) == Phony:
-            self.target = target.target
-            self.isPhony = True
-        else:
-            self.target = target
-            self.isPhony = False
+        self.target = target
         self.prerequisites = prerequisites
         self.recipe = recipe
         self.args = args
         self.kwargs = kwargs
     def __repr__(self):
         return pprint.pformat([
-            ("target", self.target),
+            ("target", self.target in phonies and "Phony(%s)" % self.target
+                or self.target),
             ("prerequisites",
                 callable(self.prerequisites) and self.prerequisites.__name__
                 or self.prerequisites),
@@ -66,17 +79,19 @@ class Rule(object):
         else:
             for p in prerequisites:
                 if p in rules:
-                    if rules[p].make():
-                        dirtyFiles.append(p)
-                        shouldRunRecipe = True
-                    elif not self.isPhony:
-                        if not os.path.exists(self.target):
-                            shouldRunRecipe = True
-                        elif os.path.getmtime(self.target) < os.path.getmtime(p):
+                    for r in rules[p]:
+                        if r.make():
                             dirtyFiles.append(p)
                             shouldRunRecipe = True
+                        elif not self.target in phonies:
+                            if not os.path.exists(self.target):
+                                shouldRunRecipe = True
+                            elif os.path.getmtime(self.target) < \
+                                    os.path.getmtime(p):
+                                dirtyFiles.append(p)
+                                shouldRunRecipe = True
                 else:
-                    if not self.isPhony and \
+                    if not self.target in phonies and \
                             os.path.getmtime(self.target) < os.path.getmtime(p):
                         dirtyFiles.append(p)
                         shouldRunRecipe = True
@@ -84,26 +99,31 @@ class Rule(object):
                 print "%(yellow)s%%s%(default)s" % COLORS % "%s <- %s" % (
                     self.target, dirtyFiles)
         if shouldRunRecipe:
-            rt = self.recipe(self.target, *self.args, **self.kwargs)
-            if (rt is None) or (rt is 0):
-                return True
-            else:
-                exit(rt)
+            try:
+                self.recipe(self.target, *self.args, **self.kwargs)
+            except ShellCommandError, e:
+                exit(e.returncode)
+            return True
         else:
             if DEBUG_LOGS: print "No need to make %s." % self.target
             return False
 
-
 def rule(targets, prerequisites=None, *args, **kwargs):
-    assert type(targets) in [str, list, Phony], \
-        "'targets' can only be a 'str', 'list' or 'Phony' object."
+    assert type(targets) in [str, list], \
+        "'targets' can only be a 'str' or 'list' object."
     assert type(prerequisites) in [type(None), str, list] or \
             callable(prerequisites), \
         "'prerequisites' can only be a 'None', 'str', 'list' or a callable."
     def ruleDecorator(recipe):
+        if PREVIEW_BUILD:
+            def dummyRecipe(target, *args, **kwargs):
+                print "Would call %s(%s).recipe()" % (target, prerequisites)
+                return True
+            recipe = dummyRecipe
         for t in type(targets) == list and targets or [targets]:
             r = Rule(t, prerequisites, recipe, args, kwargs)
-            rules[r.target] = r
+            rlist = rules.setdefault(r.target, [])
+            rlist.append(r)
         return lambda target: None
     return ruleDecorator
 
@@ -134,7 +154,17 @@ def validate(require, defaults=None):
         return newf
     return validateDecorator
 
+class ShellCommandError(StandardError):
+    def __init__(self, message, returncode):
+        self.message = message
+        self.returncode = returncode
+    def __repr__(self):
+        return "%s(%s, %s)" % (self.__class__.__name__,
+            self.message, self.returncode)
+
 def runShellCommand(cmd, **kwargs):
+    if type(cmd) == str:
+        cmd = cmd.split()
     if kwargs.get("verbose"):
         print "%(white)s%%s%(default)s" % COLORS % " ".join(cmd)
     process = subprocess.Popen(cmd,
@@ -155,7 +185,8 @@ def runShellCommand(cmd, **kwargs):
             else:
                 print line
     process.communicate()
-    return process.returncode and True or False
+    if process.returncode:
+        raise ShellCommandError(" ".join(cmd), process.returncode)
 
 @validate(
     require=["compilerFlags", "source", "output"],
@@ -177,17 +208,16 @@ def compilee(**kwargs):
     cFlags = kwargs["cFlags"]
     defines = ["-D" + d for d in kwargs["defines"]]
     sourceFile = kwargs["source"]
-    print compiler, compilerFlags, includePaths, cFlags, defines
     cmd = [compiler] + compilerFlags + includePaths + \
         cFlags + defines + ["-c", sourceFile] + ["-o", outputFile]
-    return runShellCommand(cmd, verbose=kwargs["verbose"])
+    runShellCommand(cmd, verbose=kwargs["verbose"])
 
 @validate(
     require=["depend", "source"])
 def buildDepend(**kwargs):
     kwargs["compilerFlags"] = ["-MM"]
     kwargs["output"] = kwargs["depend"]
-    return compilee(**kwargs)
+    compilee(**kwargs)
 
 @validate(
     require=["object", "source"])
@@ -195,7 +225,7 @@ def buildObject(**kwargs):
     kwargs["compilerFlags"] = []
     kwargs["output"] = kwargs["object"]
     kwargs["verbose"] = True
-    return compilee(**kwargs)
+    compilee(**kwargs)
 
 @validate(
     require=["archive", "objects"],
@@ -207,7 +237,7 @@ def archive(**kwargs):
     archiveFile = kwargs["archive"]
     objectFiles = kwargs["objects"]
     cmd = [archiver, "cr", archiveFile] + objectFiles
-    return runShellCommand(cmd, verbose=True)
+    runShellCommand(cmd, verbose=True)
 
 @validate(
     require=["libraries", "executable"],
@@ -228,7 +258,7 @@ def link(**kwargs):
         ["-l%s" % l for l in libraries] + \
         ldFlags + \
         ["-o", executable]
-    return runShellCommand(cmd, verbose=True)
+    runShellCommand(cmd, verbose=True)
 
 # ----------------- Makefile.py -----------------
 
@@ -260,4 +290,4 @@ if __name__ == "__main__":
     if not rules.get(target):
         print "Error: target '%s' not found" % target
         exit(1)
-    rules[target].make()
+    [r.make() for r in rules[target]]
