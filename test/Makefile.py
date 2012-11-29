@@ -1,4 +1,3 @@
-enableColor = True
 compiler = "gcc"
 linker = "gcc"
 ar = "ar"
@@ -54,7 +53,8 @@ def getExecutablePath():
 # .PHONY: all
 # all: fap
 
-@rule(Phony("all"), program)
+Phony("all")
+@rule("all", program)
 def makeAll(target):
     pass
 
@@ -63,7 +63,8 @@ def makeAll(target):
 # .PHONY: fap
 # fap: ./build/Debug/fap.debug
 
-@rule(Phony(program), getExecutablePath())
+Phony(program)
+@rule(program, getExecutablePath())
 def makeProgram(target):
     runShellCommand(["cp", getExecutablePath(), "."])
 
@@ -81,13 +82,12 @@ def getModuleOutputPath(moduleName):
 
 @rule(getExecutablePath(), [getModuleOutputPath(m) for m in list(modules)])
 def makeExecutable(target):
+    print "---- Making %s ----" % executableName
     moduleOutputDirs = [os.path.join(getActiveBuildPath(),
 	getModuleDirectory(m)) for m in modules]
-    rt = link(
-	libpaths=libraryPaths + moduleOutputDirs,
+    link(libpaths=libraryPaths + moduleOutputDirs,
 	libraries=libraries + list(modules),
 	executable=getExecutablePath())
-    if rt: return rt
 
 # Example:
 # --------
@@ -96,7 +96,8 @@ def makeExecutable(target):
 # oam: ./build/Debug/oam/liboam.a
 # ...
 
-@rule([Phony(m) for m in list(modules)], getModuleOutputPath)
+[Phony(m) for m in list(modules)]
+@rule(list(modules), getModuleOutputPath)
 def makeModule(target):
     pass
 
@@ -133,9 +134,9 @@ def getObjects1(moduleName):
 for m in modules:
     @rule(getModuleOutputPath(m), getObjects2, m)
     def makeModule(target, moduleName):
-	rt = archive(objects=getObjects1(moduleName),
+	print "---- Making %s ----" % moduleName
+	archive(objects=getObjects1(moduleName),
 	    archive=target)
-	if rt: return rt
 
 # Example:
 # --------
@@ -167,23 +168,22 @@ for m in modules:
 	    getActiveBuildPath() + "/")[-1] + ".c"
 	if not os.path.exists(os.path.dirname(target)):
 	    os.makedirs(os.path.dirname(target))
-        rt = buildObject(compiler=compiler,
+        buildObject(compiler=compiler,
             includePaths=module.get("incpaths"),
             source=source,
             object=target)
-	if rt: return rt
-        rt = buildDepend(compiler=compiler,
+        buildDepend(compiler=compiler,
             includePaths=module.get("incpaths"),
             source=source,
             depend=depend)
-	if rt: return rt
 
 # Example:
 # --------
 # .PHONY: clean
 # clean: clean_fap
 
-@rule(Phony("clean"), "clean_" + program)
+Phony("clean")
+@rule("clean", "clean_" + program)
 def makeClean(target):
     pass
 
@@ -195,11 +195,11 @@ def makeClean(target):
 
 import shutil
 
-@rule(Phony("clean_" + program),
+Phony("clean_" + program)
+@rule("clean_" + program,
     ["clean_" + m for m in list(modules)])
 def makeCleanApp(target):
-    rt = runShellCommand(["rm", "-rf", getExecutablePath()], verbose=True)
-    if rt: return rt
+    runShellCommand(["rm", "-rf", getExecutablePath()], verbose=True)
 
 # Example:
 # --------
@@ -209,9 +209,9 @@ def makeCleanApp(target):
 #     rm -rf .build/Debug/oam
 
 for m in modules:
-    @rule(Phony("clean_" + m), None, m)
+    Phony("clean_" + m)
+    @rule("clean_" + m, None, m)
     def makeCleanModule(target, moduleName):
-	rt = runShellCommand(["rm", "-rf", os.path.join(
+	runShellCommand(["rm", "-rf", os.path.join(
 	    getActiveBuildPath(), getModuleDirectory(moduleName))],
 	    verbose=True)
-	if rt: return rt
