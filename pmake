@@ -96,7 +96,7 @@ def rule(targets, prerequisites=None, *args, **kwargs):
         return lambda target: None
     return ruleDecorator
 
-def make(target): 
+def make(target):
     shouldRunRecipe = False
     dirtyFiles = []
     if not target in rules:
