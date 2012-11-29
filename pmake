@@ -69,6 +69,8 @@ class Rule(object):
         elif callable(self.prerequisites):
             prerequisites = self.prerequisites(
                 self.target, *self.args, **self.kwargs)
+            if type(prerequisites) == str:
+                prerequisites = [prerequisites]
         return prerequisites
     def runRecipe(self):
         try:
