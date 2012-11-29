@@ -161,7 +161,7 @@ for m in modules:
     @rule(getObjects1(m), getDepends, m)
     def makeObject(target, moduleName):
         module = modules[moduleName]
-            prefix = os.path.splitext(target)[0]
+        prefix = os.path.splitext(target)[0]
         depend = prefix + ".d"
         source = prefix.partition(
             getActiveBuildPath() + "/")[-1] + ".c"
