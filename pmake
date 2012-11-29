@@ -278,6 +278,10 @@ if __name__ == "__main__":
     if not ENABLE_COLOR:
         COLORS = NOCOLORS
 
+    if DUMP_PHONIES:
+        print "All phony targets:"
+        pprint.pprint(phonies)
+
     if DUMP_RULES:
         print "All rules are:"
         pprint.pprint(rules.values())
