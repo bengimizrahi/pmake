@@ -9,8 +9,8 @@ from collections import namedtuple
 import pprint
 import inspect
 
-enableColor = True
 
+ENABLE_COLOR = True
 DEBUG_LOGS = False
 SHOW_DIRTY_DEPENDENCIES = False
 DUMP_RULES = False
@@ -273,7 +273,7 @@ except IOError:
 if __name__ == "__main__":
 
     # Determine if colorful output is desired
-    if not enableColor:
+    if not ENABLE_COLOR:
         COLORS = NOCOLORS
 
     if DUMP_RULES:
