@@ -29,14 +29,14 @@ activeConfiguration = "debug"
 configurations = {
     "debug": {
         "cflags": commonCFlags + ["-g"],
-	"ldflags": commonLdFlags,
-	"defines": commonDefines,
+        "ldflags": commonLdFlags,
+        "defines": commonDefines,
         "buildsubdir": "Debug",
     },
     "release": {
         "cflags": commonCFlags,
-	"ldflags": commonLdFlags,
-	"defines": commonDefines,
+        "ldflags": commonLdFlags,
+        "defines": commonDefines,
         "buildsubdir": "Release",
     },
 }
@@ -51,7 +51,7 @@ libraries = ["rns", "rncwrapper", "l1if", "phyApi",
 modules = {
     "cmm" : {
         "includedir": "inc"
-        },
+    },
     "oam" : {
         "sourcefilter": '(not "test" in ?) and (not "oam/soap" in ?)',
         "incpaths": ["oam/inc", "oam/client/inc", "cmm/inc", openSslIncDir,
@@ -59,7 +59,7 @@ modules = {
             "oam/pm/inc", "oam/swm/inc", "oam/fm/inc", "oam/api",
             "son/api/inc", "syn/ntp/src", "rrm/inc", "sec/inc",
             "oam/libsoap", "osl/openssl/include"],
-        },
+    },
     "son" : {
         "sourcefilter": 'not "test" in ?',
         "incpaths": ["son/hdl/inc", "son/gsd/inc", "son/api/inc",
@@ -67,7 +67,7 @@ modules = {
             "osl/asn1/usrDec/inc", "cmm/inc", "son/npc/inc",
             phyapiIncDir, picoifIncDir, libradioIncDir],
         "defines": ["PC302=1", "NEC_IOT=1"]
-        },
+    },
     "sec" : {
         "sourcefilter": 'not "test" in ?',
         "incpaths": ["sec/inc", "cmm/inc", "oam/app/inc", "oam/api",
@@ -76,12 +76,12 @@ modules = {
     },
     "syn" : {
         "sourcefiles": ["syn/ntp/src/" + s for s in
-	    ("PC73X2_4_core.c", "msg.c", "sync.c",
+            ("PC73X2_4_core.c", "msg.c", "sync.c",
             "storage.c", "startup.c", "ctrl.c", "oscillator.c",
             "PC73X2_4_ntpf.c", "ntpf_utils.c")],
         "incpaths": ["cmm/inc", "syn/ntp/src", picogpioIncDir,
             picoifIncDir],
-	"cflags": ["-mabi=aapcs-linux", "-mfloat-abi=soft"],
+        "cflags": ["-mabi=aapcs-linux", "-mfloat-abi=soft"],
         "defines": ["GNU_CC", "xPC73X2_BUILD", "FREQ=19.2", "DEBUG",
             "API_BUILD", "TOOLS_BSP=4", "KERNEL_2_6_30_PLUS"],
     },
@@ -91,7 +91,7 @@ modules = {
             "oam/cm/inc", "oam/cmm/inc", "oam/fm/inc",
             "oam/swm/inc", "cmm/inc", "son/api/inc",
             "rrm/inc", "sec/inc"],
-	"cflags": ["-O2", "-Wshadow", "-Wcast-qual", "-Wstrict-prototypes"],
+        "cflags": ["-O2", "-Wshadow", "-Wcast-qual", "-Wstrict-prototypes"],
         "defines": ["FAP_DEBUG_SWITCH=1", "FWEXT_UTILITY"],
     },
     "rrm": {
@@ -186,21 +186,21 @@ def makeProgram(target):
 @cache
 def getModuleOutputPath(moduleName):
     return os.path.join(
-	getActiveBuildPath(), getModuleDirectory(moduleName), "lib%s.a" %
-	moduleName)
+        getActiveBuildPath(),
+        getModuleDirectory(moduleName),
+        "lib%s.a" % moduleName)
 
 
 @rule(getExecutablePath(), [getModuleOutputPath(m) for m in list(modules)])
 def makeExecutable(target):
     config = configurations[activeConfiguration]
     moduleOutputDirs = [os.path.join(getActiveBuildPath(),
-	getModuleDirectory(m)) for m in modules]
-    link(
-	linker=linker,
-	libpaths=libraryPaths + moduleOutputDirs,
-	libraries=libraries + list(modules),
-	ldFlags=config["ldflags"],
-	executable=getExecutablePath())
+        getModuleDirectory(m)) for m in modules]
+    link(linker=linker,
+        libpaths=libraryPaths + moduleOutputDirs,
+        libraries=libraries + list(modules),
+        ldFlags=config["ldflags"],
+        executable=getExecutablePath())
 
 # Example:
 # --------
@@ -222,7 +222,7 @@ Phony("rns")
 @rule("rns", None)
 def makeRns(target):
     with cd("rns"):
-	runShellCommand("make", verbose=True)
+        runShellCommand("make", verbose=True)
 
 # Example:
 # --------
@@ -236,7 +236,7 @@ Phony("rncwrapper")
 @rule("rncwrapper", None)
 def makeRncwrapper(target):
     with cd("rrm/rncwrapper"):
-	runShellCommand("make", verbose=True)
+        runShellCommand("make", verbose=True)
 
 # Example:
 # --------
@@ -264,21 +264,21 @@ def getObjects2(_, moduleName):
     query = module.get("sourcefilter")
     sourceFiles = module.get("sourcefiles")
     def handleFile(absf):
-	if query and not eval(query.replace("?", "absf")):
-	    return
-	basePath, ext = os.path.splitext(absf)
-	if not ext in (".c", ".cpp"):
-	    return
-	objects.append(os.path.join(
-	    getActiveBuildPath(),
-	    basePath + ".o"))
+        if query and not eval(query.replace("?", "absf")):
+            return
+        basePath, ext = os.path.splitext(absf)
+        if not ext in (".c", ".cpp"):
+            return
+        objects.append(os.path.join(
+            getActiveBuildPath(),
+            basePath + ".o"))
     if sourceFiles:
-	map(lambda f: handleFile(f), sourceFiles)
+        map(lambda f: handleFile(f), sourceFiles)
     else:
-	for rootDir, subdirs, files in os.walk(moduleDirectory):
-	    for f in files:
-		absf = os.path.join(rootDir, f)
-		handleFile(absf)
+        for rootDir, subdirs, files in os.walk(moduleDirectory):
+            for f in files:
+                absf = os.path.join(rootDir, f)
+                handleFile(absf)
     return objects
 
 def getObjects1(moduleName):
@@ -287,8 +287,8 @@ def getObjects1(moduleName):
 for m in modules:
     @rule(getModuleOutputPath(m), getObjects2, m)
     def makeModule(target, moduleName):
-	archive(objects=getObjects1(moduleName),
-	    archive=target)
+        archive(objects=getObjects1(moduleName),
+            archive=target)
 
 # Example:
 # --------
@@ -321,30 +321,30 @@ def getDepends(objectFile, moduleName):
 for m in modules:
     @rule(getObjects1(m), getDepends, m)
     def makeObject(target, moduleName):
-	config = configurations[activeConfiguration]
-	module = modules[moduleName]
-	cFlags = module.get("cflags", []) + config.get("cflags", [])
-	defines = module.get("defines", []) + config.get("defines", [])
-	includePaths = module.get("incpaths", [])
-	if module.get("includedir"):
-	    includePaths.append(os.path.join(
-		getModuleDirectory(moduleName), module["includedir"]))
+        config = configurations[activeConfiguration]
+        module = modules[moduleName]
+        cFlags = module.get("cflags", []) + config.get("cflags", [])
+        defines = module.get("defines", []) + config.get("defines", [])
+        includePaths = module.get("incpaths", [])
+        if module.get("includedir"):
+            includePaths.append(os.path.join(
+                getModuleDirectory(moduleName), module["includedir"]))
         prefix = os.path.splitext(target)[0]
-	depend = prefix + ".d"
-	source = prefix.partition(
-	    getActiveBuildPath() + "/")[-1] + ".c"
-	if not os.path.exists(os.path.dirname(target)):
-	    os.makedirs(os.path.dirname(target))
+        depend = prefix + ".d"
+        source = prefix.partition(
+            getActiveBuildPath() + "/")[-1] + ".c"
+        if not os.path.exists(os.path.dirname(target)):
+            os.makedirs(os.path.dirname(target))
         buildObject(compiler=compiler,
             includePaths=includePaths,
-	    cFlags=config.get("cflags"),
-	    defines=defines,
+            cFlags=config.get("cflags"),
+            defines=defines,
             source=source,
             object=target)
         buildDepend(compiler=compiler,
             includePaths=includePaths,
-	    cFlags=config.get("cflags"),
-	    defines=defines,
+            cFlags=config.get("cflags"),
+            defines=defines,
             source=source,
             depend=depend)
 
@@ -409,9 +409,9 @@ for m in modules:
     Phony("clean_" + m)
     @rule("clean_" + m, None, m)
     def makeCleanModule(target, moduleName):
-	runShellCommand(["rm", "-rf", os.path.join(
-	    getActiveBuildPath(), getModuleDirectory(moduleName))],
-	    verbose=True)
+        runShellCommand(["rm", "-rf", os.path.join(
+            getActiveBuildPath(), getModuleDirectory(moduleName))],
+            verbose=True)
 
 # Example:
 # --------
@@ -425,7 +425,7 @@ Phony("clean_rns")
 @rule("clean_rns")
 def makeCleanRns(target):
     with cd("rns"):
-	runShellCommand("make clean", verbose=True)
+        runShellCommand("make clean", verbose=True)
 
 # Example:
 # --------
@@ -439,4 +439,4 @@ Phony("clean_rncwrapper")
 @rule("clean_rncwrapper")
 def makeCleanRncwrapper(target):
     with cd("rrm/rncwrapper"):
-	runShellCommand("make clean", verbose=True)
+        runShellCommand("make clean", verbose=True)

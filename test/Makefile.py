@@ -19,14 +19,14 @@ libraryPaths = []
 libraries = []
 modules = {
     "app" : {
-	"incpaths" : ["rrm", "son", "oam"]},
+        "incpaths" : ["rrm", "son", "oam"]},
     "rrm" : {
-	"incpaths" : ["phy"]},
+        "incpaths" : ["phy"]},
     "son" : {
-	"incpaths" : ["phy", "rrm"]},
+        "incpaths" : ["phy", "rrm"]},
     "http" : {},
     "oam" : {
-	"incpaths" : ["soap"]},
+        "incpaths" : ["soap"]},
     "phy" : {},
 }
 program = "fap"
@@ -76,18 +76,18 @@ def makeProgram(target):
 @cache
 def getModuleOutputPath(moduleName):
     return os.path.join(
-	getActiveBuildPath(), getModuleDirectory(moduleName), "lib%s.a" %
-	moduleName)
+        getActiveBuildPath(),
+        getModuleDirectory(moduleName), "lib%s.a" %
+        moduleName)
 
 
 @rule(getExecutablePath(), [getModuleOutputPath(m) for m in list(modules)])
 def makeExecutable(target):
-    print "---- Making %s ----" % executableName
     moduleOutputDirs = [os.path.join(getActiveBuildPath(),
-	getModuleDirectory(m)) for m in modules]
+        getModuleDirectory(m)) for m in modules]
     link(libpaths=libraryPaths + moduleOutputDirs,
-	libraries=libraries + list(modules),
-	executable=getExecutablePath())
+        libraries=libraries + list(modules),
+        executable=getExecutablePath())
 
 # Example:
 # --------
@@ -120,12 +120,11 @@ def getObjects2(_, moduleName):
             absf = os.path.join(rootDir, f)
             if query and not eval(query):
                 continue
-	    basePath, ext = os.path.splitext(absf)
-	    if not ext in (".c", ".cpp"):
-		continue
+            basePath, ext = os.path.splitext(absf)
+            if not ext in (".c", ".cpp"):
+                continue
             objects.append(os.path.join(
-		getActiveBuildPath(),
-		basePath + ".o"))
+                getActiveBuildPath(), basePath + ".o"))
     return objects
 
 def getObjects1(moduleName):
@@ -134,9 +133,9 @@ def getObjects1(moduleName):
 for m in modules:
     @rule(getModuleOutputPath(m), getObjects2, m)
     def makeModule(target, moduleName):
-	print "---- Making %s ----" % moduleName
-	archive(objects=getObjects1(moduleName),
-	    archive=target)
+        print "---- Making %s ----" % moduleName
+        archive(objects=getObjects1(moduleName),
+            archive=target)
 
 # Example:
 # --------
@@ -161,21 +160,21 @@ def getDepends(objectFile, moduleName):
 for m in modules:
     @rule(getObjects1(m), getDepends, m)
     def makeObject(target, moduleName):
-	module = modules[moduleName]
-        prefix = os.path.splitext(target)[0]
-	depend = prefix + ".d"
-	source = prefix.partition(
-	    getActiveBuildPath() + "/")[-1] + ".c"
-	if not os.path.exists(os.path.dirname(target)):
-	    os.makedirs(os.path.dirname(target))
-        buildObject(compiler=compiler,
-            includePaths=module.get("incpaths"),
-            source=source,
-            object=target)
-        buildDepend(compiler=compiler,
-            includePaths=module.get("incpaths"),
-            source=source,
-            depend=depend)
+        module = modules[moduleName]
+            prefix = os.path.splitext(target)[0]
+        depend = prefix + ".d"
+        source = prefix.partition(
+            getActiveBuildPath() + "/")[-1] + ".c"
+        if not os.path.exists(os.path.dirname(target)):
+            os.makedirs(os.path.dirname(target))
+            buildObject(compiler=compiler,
+                includePaths=module.get("incpaths"),
+                source=source,
+                object=target)
+            buildDepend(compiler=compiler,
+                includePaths=module.get("incpaths"),
+                source=source,
+                depend=depend)
 
 # Example:
 # --------
@@ -212,6 +211,6 @@ for m in modules:
     Phony("clean_" + m)
     @rule("clean_" + m, None, m)
     def makeCleanModule(target, moduleName):
-	runShellCommand(["rm", "-rf", os.path.join(
-	    getActiveBuildPath(), getModuleDirectory(moduleName))],
-	    verbose=True)
+        runShellCommand(["rm", "-rf", os.path.join(
+            getActiveBuildPath(), getModuleDirectory(moduleName))],
+            verbose=True)
