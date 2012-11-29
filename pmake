@@ -85,6 +85,8 @@ class Rule(object):
 def rule(targets, prerequisites=None, *args, **kwargs):
     assert type(targets) in [str, list], \
         "'targets' can only be a 'str' or 'list' object."
+    if type(targets) == list:
+        assert targets, "'targets' can not be an empty list."
     assert type(prerequisites) in [type(None), str, list] or \
             callable(prerequisites), \
         "'prerequisites' can only be a 'None', 'str', 'list' or a callable."
