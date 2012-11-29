@@ -14,7 +14,7 @@ ENABLE_COLOR = True
 DEBUG_LOGS = False
 SHOW_DIRTY_DEPENDENCIES = False
 DUMP_RULES = False
-PREVIEW_BUILD = True
+PREVIEW_MAKE = False
 
 COLORS = {"blue": "\033[1;34m", "default": "\x1B[m", "yellow": "\033[1;33m",
     "magenda": "\033[1;31m", "white": "\033[1;37m", "green": "\033[1;32m",
@@ -61,52 +61,22 @@ class Rule(object):
             ("args", self.args),
             ("kwargs", self.kwargs)
         ])
-    def make(self):
-        if DEBUG_LOGS: print "Making %s" % self
-        shouldRunRecipe = False
-        dirtyFiles = []
-        if any(map(lambda t: type(self.prerequisites) == t,
-                (list, type(None)))):
+    def getPrerequisites(self):
+        if any(map(lambda t: type(self.prerequisites) == t, (list, type(None)))):
             prerequisites = self.prerequisites
         if type(self.prerequisites) == str:
             prerequisites = [self.prerequisites]
         elif callable(self.prerequisites):
             prerequisites = self.prerequisites(
                 self.target, *self.args, **self.kwargs)
-        if DEBUG_LOGS: print "prerequisites: %s" % prerequisites
-        if not prerequisites:
-            shouldRunRecipe = True
-        else:
-            for p in prerequisites:
-                if p in rules:
-                    for r in rules[p]:
-                        if r.make():
-                            dirtyFiles.append(p)
-                            shouldRunRecipe = True
-                        elif not self.target in phonies:
-                            if not os.path.exists(self.target):
-                                shouldRunRecipe = True
-                            elif os.path.getmtime(self.target) < \
-                                    os.path.getmtime(p):
-                                dirtyFiles.append(p)
-                                shouldRunRecipe = True
-                else:
-                    if not self.target in phonies and \
-                            os.path.getmtime(self.target) < os.path.getmtime(p):
-                        dirtyFiles.append(p)
-                        shouldRunRecipe = True
-        if SHOW_DIRTY_DEPENDENCIES:
-                print "%(yellow)s%%s%(default)s" % COLORS % "%s <- %s" % (
-                    self.target, dirtyFiles)
-        if shouldRunRecipe:
-            try:
-                self.recipe(self.target, *self.args, **self.kwargs)
-            except ShellCommandError, e:
-                exit(e.returncode)
-            return True
-        else:
-            if DEBUG_LOGS: print "No need to make %s." % self.target
-            return False
+        return prerequisites
+    def runRecipe(self):
+        try:
+            self.recipe(self.target, *self.args, **self.kwargs)
+        except ShellCommandError, e:
+            if DEBUG_LOGS: print e.message
+            return e.returncode
+        return 0
 
 def rule(targets, prerequisites=None, *args, **kwargs):
     assert type(targets) in [str, list], \
@@ -115,17 +85,47 @@ def rule(targets, prerequisites=None, *args, **kwargs):
             callable(prerequisites), \
         "'prerequisites' can only be a 'None', 'str', 'list' or a callable."
     def ruleDecorator(recipe):
-        if PREVIEW_BUILD:
-            def dummyRecipe(target, *args, **kwargs):
-                print "Would call %s(%s).recipe()" % (target, prerequisites)
-                return True
-            recipe = dummyRecipe
         for t in type(targets) == list and targets or [targets]:
             r = Rule(t, prerequisites, recipe, args, kwargs)
             rlist = rules.setdefault(r.target, [])
             rlist.append(r)
         return lambda target: None
     return ruleDecorator
+
+def make(target): 
+    shouldRunRecipe = False
+    dirtyFiles = []
+    if not target in rules:
+        return False
+    if DEBUG_LOGS or PREVIEW_MAKE: print "make(%s)" % target
+    for r in rules[target]:
+        prerequisites = r.getPrerequisites()
+        if DEBUG_LOGS: print "prerequisites: %s" % prerequisites
+        if not prerequisites:
+            shouldRunRecipe = True
+        else:
+            for p in prerequisites:
+                if make(p) or ((not target in phonies) and (
+                        not os.path.exists(target) or ((not p in phonies) and
+                        os.path.getmtime(target) < os.path.getmtime(p)))):
+                    dirtyFiles.append(p)
+                    shouldRunRecipe = True
+    if SHOW_DIRTY_DEPENDENCIES:
+            print "%(yellow)s%%s%(default)s" % COLORS % "%s <- %s" % (
+                target, dirtyFiles)
+    if shouldRunRecipe:
+        for r in rules[target]:
+            if PREVIEW_MAKE:
+                print "%s(%s).%s()" % (r.target, prerequisites,
+                    r.recipe.__name__)
+                continue
+            result = r.runRecipe()
+            if result:
+                exit(result)
+        return True
+    else:
+        if DEBUG_LOGS: print "No need to make %s." % target
+        return False
 
 def cache(f):
     results = {}
@@ -290,4 +290,4 @@ if __name__ == "__main__":
     if not rules.get(target):
         print "Error: target '%s' not found" % target
         exit(1)
-    [r.make() for r in rules[target]]
+    make(target)
