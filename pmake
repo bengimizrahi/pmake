@@ -279,7 +279,6 @@ except IOError:
 
 if __name__ == "__main__":
 
-    # Determine if colorful output is desired
     if not ENABLE_COLOR:
         COLORS = NOCOLORS
 
@@ -292,12 +291,10 @@ if __name__ == "__main__":
         pprint.pprint(rules.values())
         print
 
-    # Get the target
     target = "all"
     if len(sys.argv) == 2:
         target = sys.argv[1]
     
-    # Make the target
     if not rules.get(target):
         print "Error: target '%s' not found" % target
         exit(1)
