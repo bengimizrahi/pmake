@@ -361,14 +361,14 @@ Phony("version_header")
 @rule("version_header", None)
 def makeVersionHeader(target):
     with file("oam/app/inc/version.h", "w") as f:
-	f.write(
+        f.write(
 """#ifndef VERSION_HEADER__
 #define VERSION_HEADER__
 #define FAP_BUILD_DATE "%(buildDate)s"
 #define FAP_BUILD_USER "%(buildUser)s"
 #endif  /* VERSION_HEADER__ */""" % {
-	    "buildUser": os.getlogin(),
-	    "buildDate": datetime.datetime.now()})
+            "buildUser": os.getlogin(),
+            "buildDate": datetime.datetime.now()})
 
 # Example:
 # --------
