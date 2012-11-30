@@ -323,8 +323,8 @@ for m in modules:
         module = modules[moduleName]
         cFlags = module.get("cflags", []) + config.get("cflags", [])
         defines = module.get("defines", []) + config.get("defines", [])
-        includePaths = module.get("incpaths", ["."])
-        dependentModules = module.get("depends"):
+        includePaths = module.get("incpaths", ["."])[:]
+        dependentModules = module.get("depends")
         if dependentModules:
             map(lambda m: includePaths.extend(modules[m].get("incpaths",
                 [getModuleDirectory(m)])), dependentModules)
