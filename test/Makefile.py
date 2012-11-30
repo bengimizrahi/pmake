@@ -19,14 +19,15 @@ libraryPaths = []
 libraries = []
 modules = {
     "app" : {
-        "incpaths" : ["rrm", "son", "oam"]},
+        "depends" : ["rrm", "son", "oam"]},
     "rrm" : {
-        "incpaths" : ["phy"]},
+        "depends" : ["phy"]},
     "son" : {
-        "incpaths" : ["phy", "rrm"]},
+        "depends" : ["phy", "rrm"]},
     "http" : {},
     "oam" : {
-        "incpaths" : ["soap"]},
+        "depends" : ["soap"]},
+    "soap" : {},
     "phy" : {},
 }
 program = "fap"
@@ -165,14 +166,19 @@ for m in modules:
         depend = prefix + ".d"
         source = prefix.partition(
             getActiveBuildPath() + "/")[-1] + ".c"
+        dependentModules = module.get("depends")
+        includePaths = module.get("incpaths", ["."])
+        if dependentModules:
+            map(lambda m: includePaths.extend(modules[m].get("incpaths",
+                [getModuleDirectory(m)])), dependentModules)
         if not os.path.exists(os.path.dirname(target)):
             os.makedirs(os.path.dirname(target))
             buildObject(compiler=compiler,
-                includePaths=module.get("incpaths"),
+                includePaths=includePaths,
                 source=source,
                 object=target)
             buildDepend(compiler=compiler,
-                includePaths=module.get("incpaths"),
+                includePaths=includePaths,
                 source=source,
                 depend=depend)
 
