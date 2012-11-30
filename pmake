@@ -208,8 +208,6 @@ def compilee(**kwargs):
     compilerFlags = kwargs["compilerFlags"]
     outputFile = kwargs["output"]
     includePaths = kwargs["includePaths"][:]
-    if not "-I." in includePaths:
-        includePaths.append(".")
     includePaths = ["-I" + i for i in includePaths]
     cFlags = kwargs["cFlags"]
     defines = ["-D" + d for d in kwargs["defines"]]
