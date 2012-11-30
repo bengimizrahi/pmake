@@ -291,7 +291,8 @@ for m in modules:
 # --------
 # .build/Debug/oam/app/src/appVersion.o: version_header
 
-@rule(os.path.join(getActiveBuildPath(), "oam/app/src/appVersion.o"), "version_header")
+@rule(os.path.join(getActiveBuildPath(), "oam/app/src/appVersion.o"),
+    "version_header")
 def makeOamAppVersion(target):
     pass
 

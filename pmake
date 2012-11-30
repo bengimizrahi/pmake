@@ -64,7 +64,8 @@ class Rule(object):
             ("kwargs", self.kwargs)
         ])
     def getPrerequisites(self):
-        if any(map(lambda t: type(self.prerequisites) == t, (list, type(None)))):
+        if any(map(lambda t: type(self.prerequisites) == t,
+                (list, type(None)))):
             prerequisites = self.prerequisites
         if type(self.prerequisites) == str:
             prerequisites = [self.prerequisites]
@@ -112,7 +113,8 @@ def make(target):
         else:
             for p in prerequisites:
                 if make(p) or ((not target in phonies) and (
-                        not os.path.exists(target) or ((not p in phonies) and
+                        not os.path.exists(target) or
+                        ((not p in phonies) and
                         os.path.getmtime(target) < os.path.getmtime(p)))):
                     dirtyFiles.append(p)
                     shouldRunRecipe = True
@@ -153,7 +155,8 @@ def validate(require, defaults=None):
                 return False
             if defaults:
                 missingOptionalArgs = filter(
-                    lambda o: (not o in kwargs) or not kwargs.get(o), defaults)
+                    lambda o: (not o in kwargs) or not kwargs.get(o),
+                        defaults)
                 for o in missingOptionalArgs:
                     kwargs[o] = defaults[o]
             return f(**kwargs)
