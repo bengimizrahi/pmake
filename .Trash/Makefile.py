@@ -50,56 +50,54 @@ libraries = ["rns", "rncwrapper", "l1if", "phyApi",
     "f8api", "radio", "soap", "pthread"]
 modules = {
     "cmm" : {
-        "includedir": "inc"
-    },
+        "incpaths": ["cmm/inc"]},
     "oam" : {
+        "depends": ["cmm", "rrm", "son", "sec", "syn"],
         "sourcefilter": '(not "test" in ?) and (not "oam/soap" in ?)',
-        "incpaths": ["oam/inc", "oam/client/inc", "cmm/inc", openSslIncDir,
-            picogpioIncDir, "oam/cmm/inc", "oam/app/inc", "oam/cm/inc",
-            "oam/pm/inc", "oam/swm/inc", "oam/fm/inc", "oam/api",
-            "son/api/inc", "syn/ntp/src", "rrm/inc", "sec/inc",
-            "oam/libsoap", "osl/openssl/include"],
+        "incpaths": ["oam/inc", "oam/client/inc", "oam/cmm/inc",
+            "oam/app/inc", "oam/cm/inc", "oam/pm/inc", "oam/swm/inc",
+            "oam/fm/inc", "oam/api", "oam/libsoap"],
+        "extincpaths": [openSslIncDir, picogpioIncDir,
+            "osl/openssl/include"]
     },
     "son" : {
+        "depends": ["oam", "cmm"],
         "sourcefilter": 'not "test" in ?',
         "incpaths": ["son/hdl/inc", "son/gsd/inc", "son/api/inc",
-            "son/alg/inc", "oam/api", "oam/cm/inc", "oam/fm/inc",
-            "osl/asn1/usrDec/inc", "cmm/inc", "son/npc/inc",
-            phyapiIncDir, picoifIncDir, libradioIncDir],
+            "son/alg/inc", "son/npc/inc"]
+        "extincpaths": [phyapiIncDir, picoifIncDir, libradioIncDir,
+            "osl/asn1/usrDec/inc"],
         "defines": ["PC302=1", "NEC_IOT=1"]
     },
     "sec" : {
+        "depends": ["oam", "cmm"],
         "sourcefilter": 'not "test" in ?',
-        "incpaths": ["sec/inc", "cmm/inc", "oam/app/inc", "oam/api",
-            "oam/client/inc", "oam/fm/inc", "oam/cm/inc", "oam/swm/inc",
-            "oam/pm/inc", "oam/cmm/inc"],
+        "incpaths": ["sec/inc"],
     },
     "syn" : {
+        "depends": ["cmm"],
         "sourcefiles": ["syn/ntp/src/" + s for s in
             ("PC73X2_4_core.c", "msg.c", "sync.c",
             "storage.c", "startup.c", "ctrl.c", "oscillator.c",
             "PC73X2_4_ntpf.c", "ntpf_utils.c")],
-        "incpaths": ["cmm/inc", "syn/ntp/src", picogpioIncDir,
-            picoifIncDir],
+        "incpaths": ["syn/ntp/src"],
+        "extincpaths": [picogpioIncDir, picoifIncDir]
         "cflags": ["-mabi=aapcs-linux", "-mfloat-abi=soft"],
         "defines": ["GNU_CC", "xPC73X2_BUILD", "FREQ=19.2", "DEBUG",
             "API_BUILD", "TOOLS_BSP=4", "KERNEL_2_6_30_PLUS"],
     },
     "fmw" : {
-        "incpaths": ["osl/openssl/include",
-            "oam/app/inc", "oam/api",
-            "oam/cm/inc", "oam/cmm/inc", "oam/fm/inc",
-            "oam/swm/inc", "cmm/inc", "son/api/inc",
-            "rrm/inc", "sec/inc"],
+        "depends": ["oam", "son", "rrm", "sec", "cmm"]
+        "extincpaths": ["osl/openssl/include"],
         "cflags": ["-O2", "-Wshadow", "-Wcast-qual", "-Wstrict-prototypes"],
         "defines": ["FAP_DEBUG_SWITCH=1", "FWEXT_UTILITY"],
     },
     "rrm": {
-        "includedir": "inc",
+        "depends": ["cmm", "oam"],
         "sourcefilter":
             '(not "test" in ?) and (not "rncwrapper" in ?)' \
             'and (not "l1if" in ?)',
-        "incpaths": ["cmm/inc", "rns",
+        "incpaths": ["rrm/inc",
             "rrm/l1if/LittleEndianMsgAccess/inc",
             "rrm/l1if/MsgDecHdlrs/inc",
             "rrm/l1if/MsgEncHdlrs/inc",
@@ -107,10 +105,9 @@ modules = {
             "rrm/l1if/ProcEncHdlrs/inc",
             "rrm/l1if/StructDefs/inc",
             "rrm/l1if/UserProcDecHdlrs/inc",
-            "rrm/l1if/UserProcEncHdlrs/inc",
-            picoifIncDir, f8apiIncDir, phyapiIncDir,
-            libradioIncDir, "rrm/rncwrapper",
-            "oam/swm/inc"],
+            "rrm/l1if/UserProcEncHdlrs/inc"],
+        "extincpaths": ["rns", "rrm/rncwrapper", picoifIncDir,
+            f8apiIncDir, phyapiIncDir,libradioIncDir]
         "defines": ["SUNOS", "SS", "SS_MT", "ANSI", "_GNU_SOURCE",
             "SS_LINUX", "_REENTRANT", "__EXTENSIONS__",
             "DEBUGNOEXIT", "RX", "RR", "LR", "RX", "SM",
@@ -325,10 +322,12 @@ for m in modules:
         module = modules[moduleName]
         cFlags = module.get("cflags", []) + config.get("cflags", [])
         defines = module.get("defines", []) + config.get("defines", [])
-        includePaths = module.get("incpaths", [])
-        if module.get("includedir"):
-            includePaths.append(os.path.join(
-                getModuleDirectory(moduleName), module["includedir"]))
+        includePaths = module.get("incpaths", ["."])
+        dependentModules = module.get("depends"):
+        if dependentModules:
+            map(lambda m: includePaths.extend(modules[m].get("incpaths",
+                [getModuleDirectory(m)])), dependentModules)
+        includePaths += module.get("extincpaths", [])
         prefix = os.path.splitext(target)[0]
         depend = prefix + ".d"
         source = prefix.partition(
