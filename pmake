@@ -279,6 +279,10 @@ except IOError:
 
 if __name__ == "__main__":
 
+    target = "all"
+    if len(sys.argv) > 1:
+        target = sys.argv[1]
+
     if not ENABLE_COLOR:
         COLORS = NOCOLORS
 
@@ -290,10 +294,6 @@ if __name__ == "__main__":
         print "All rules are:"
         pprint.pprint(rules.values())
         print
-
-    target = "all"
-    if len(sys.argv) == 2:
-        target = sys.argv[1]
     
     if not rules.get(target):
         print "Error: target '%s' not found" % target
@@ -302,4 +302,5 @@ if __name__ == "__main__":
     if INTERPRETER:
         import pdb
         pdb.set_trace()
+
     make(target)
