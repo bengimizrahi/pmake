@@ -58,16 +58,16 @@ modules = {
             "oam/app/inc", "oam/cm/inc", "oam/pm/inc", "oam/swm/inc",
             "oam/fm/inc", "oam/api", "oam/libsoap"],
         "extincpaths": [openSslIncDir, picogpioIncDir,
-            "osl/openssl/include"]
+            "osl/openssl/include"],
     },
     "son" : {
         "depends": ["oam", "cmm"],
         "sourcefilter": 'not "test" in ?',
         "incpaths": ["son/hdl/inc", "son/gsd/inc", "son/api/inc",
-            "son/alg/inc", "son/npc/inc"]
+            "son/alg/inc", "son/npc/inc"],
         "extincpaths": [phyapiIncDir, picoifIncDir, libradioIncDir,
             "osl/asn1/usrDec/inc"],
-        "defines": ["PC302=1", "NEC_IOT=1"]
+        "defines": ["PC302=1", "NEC_IOT=1"],
     },
     "sec" : {
         "depends": ["oam", "cmm"],
@@ -81,13 +81,13 @@ modules = {
             "storage.c", "startup.c", "ctrl.c", "oscillator.c",
             "PC73X2_4_ntpf.c", "ntpf_utils.c")],
         "incpaths": ["syn/ntp/src"],
-        "extincpaths": [picogpioIncDir, picoifIncDir]
+        "extincpaths": [picogpioIncDir, picoifIncDir],
         "cflags": ["-mabi=aapcs-linux", "-mfloat-abi=soft"],
         "defines": ["GNU_CC", "xPC73X2_BUILD", "FREQ=19.2", "DEBUG",
             "API_BUILD", "TOOLS_BSP=4", "KERNEL_2_6_30_PLUS"],
     },
     "fmw" : {
-        "depends": ["oam", "son", "rrm", "sec", "cmm"]
+        "depends": ["oam", "son", "rrm", "sec", "cmm"],
         "extincpaths": ["osl/openssl/include"],
         "cflags": ["-O2", "-Wshadow", "-Wcast-qual", "-Wstrict-prototypes"],
         "defines": ["FAP_DEBUG_SWITCH=1", "FWEXT_UTILITY"],
@@ -107,7 +107,7 @@ modules = {
             "rrm/l1if/UserProcDecHdlrs/inc",
             "rrm/l1if/UserProcEncHdlrs/inc"],
         "extincpaths": ["rns", "rrm/rncwrapper", picoifIncDir,
-            f8apiIncDir, phyapiIncDir,libradioIncDir]
+            f8apiIncDir, phyapiIncDir,libradioIncDir],
         "defines": ["SUNOS", "SS", "SS_MT", "ANSI", "_GNU_SOURCE",
             "SS_LINUX", "_REENTRANT", "__EXTENSIONS__",
             "DEBUGNOEXIT", "RX", "RR", "LR", "RX", "SM",
