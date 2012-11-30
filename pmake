@@ -198,9 +198,10 @@ def runShellCommand(cmd, **kwargs):
         raise ShellCommandError(" ".join(cmd), process.returncode)
 
 @validate(
-    require=["compilerFlags", "source", "output"],
+    require=["source", "output"],
     defaults={
         "compiler": DEFAULT_COMPILER,
+        "compilerFlags": [],
         "includePaths": [],
         "defines": [],
         "cFlags": [],
@@ -229,7 +230,6 @@ def buildDepend(**kwargs):
 @validate(
     require=["object", "source"])
 def buildObject(**kwargs):
-    kwargs["compilerFlags"] = []
     kwargs["output"] = kwargs["object"]
     kwargs["verbose"] = True
     compilee(**kwargs)
