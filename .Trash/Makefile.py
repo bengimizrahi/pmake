@@ -341,12 +341,6 @@ for m in modules:
             defines=defines,
             source=source,
             object=target)
-        buildDepend(compiler=compiler,
-            includePaths=includePaths,
-            cFlags=config.get("cflags"),
-            defines=defines,
-            source=source,
-            depend=depend)
 
 # Example:
 # --------
