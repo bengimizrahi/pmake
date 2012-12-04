@@ -221,17 +221,16 @@ def compilee(**kwargs):
     runShellCommand(cmd, verbose=kwargs["verbose"])
 
 @validate(
-    require=["depend", "source"])
-def buildDepend(**kwargs):
-    kwargs["compilerFlags"] = ["-MM"]
-    kwargs["output"] = kwargs["depend"]
-    compilee(**kwargs)
-
-@validate(
     require=["object", "source"])
 def buildObject(**kwargs):
+    objectFile = kwargs["object"]
+    dependFile = os.path.splitext(objectFile)[0] + ".d"
     kwargs["output"] = kwargs["object"]
     kwargs["verbose"] = True
+    compilee(**kwargs)
+    kwargs["compilerFlags"] = ["-MM"]
+    kwargs["output"] = dependFile
+    kwargs["verbose"] = False
     compilee(**kwargs)
 
 @validate(
