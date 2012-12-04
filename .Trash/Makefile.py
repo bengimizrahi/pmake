@@ -168,10 +168,18 @@ def makeAll(target):
 # Example:
 # --------
 # .PHONY: fap
-# fap: ./build/Debug/fap.debug
+# fap: fap.debug
 
 Phony(program)
-@rule(program, getExecutablePath())
+@rule(program, executableName)
+def makeProgram(target):
+    pass
+
+# Example:
+# --------
+# fap.debug: ./build/Debug/fap.debug
+
+@rule(executableName, getExecutablePath())
 def makeProgram(target):
     runShellCommand(["cp", getExecutablePath(), "."])
 
