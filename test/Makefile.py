@@ -173,14 +173,14 @@ for m in modules:
                 [getModuleDirectory(m)])), dependentModules)
         if not os.path.exists(os.path.dirname(target)):
             os.makedirs(os.path.dirname(target))
-            buildObject(compiler=compiler,
-                includePaths=includePaths,
-                source=source,
-                object=target)
-            buildDepend(compiler=compiler,
-                includePaths=includePaths,
-                source=source,
-                depend=depend)
+        buildObject(compiler=compiler,
+            includePaths=includePaths,
+            source=source,
+            object=target)
+        buildDepend(compiler=compiler,
+            includePaths=includePaths,
+            source=source,
+            depend=depend)
 
 # Example:
 # --------
