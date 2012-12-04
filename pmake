@@ -211,13 +211,15 @@ def compilee(**kwargs):
     compiler = kwargs["compiler"]
     compilerFlags = kwargs["compilerFlags"]
     outputFile = kwargs["output"]
+    dependFile = os.path.splitext(outputFile)[0] + ".d"
     includePaths = kwargs["includePaths"][:]
     includePaths = ["-I" + i for i in includePaths]
     cFlags = kwargs["cFlags"]
     defines = ["-D" + d for d in kwargs["defines"]]
     sourceFile = kwargs["source"]
     cmd = [compiler] + compilerFlags + includePaths + \
-        cFlags + defines + ["-c", sourceFile] + ["-o", outputFile]
+        cFlags + defines + ["-c", sourceFile] + \
+        ["-o", outputFile] + ["-MMD", "-MF", dependFile]
     runShellCommand(cmd, verbose=kwargs["verbose"])
 
 @validate(
@@ -227,10 +229,6 @@ def buildObject(**kwargs):
     dependFile = os.path.splitext(objectFile)[0] + ".d"
     kwargs["output"] = kwargs["object"]
     kwargs["verbose"] = True
-    compilee(**kwargs)
-    kwargs["compilerFlags"] = ["-MM"]
-    kwargs["output"] = dependFile
-    kwargs["verbose"] = False
     compilee(**kwargs)
 
 @validate(
