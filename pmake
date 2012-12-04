@@ -246,20 +246,23 @@ def archive(**kwargs):
     runShellCommand(cmd, verbose=True)
 
 @validate(
-    require=["libraries", "executable"],
+    require=["executable"],
     defaults={
         "linker": DEFAULT_LINKER,
         "libpaths": [],
         "libraries": [],
+        "objects": [],
         "ldFlags": [],
     })
 def link(**kwargs):
     linker = kwargs["linker"]
     libraryPaths = kwargs["libpaths"]
     libraries = kwargs["libraries"]
+    objects = kwargs["objects"]
     executable = kwargs["executable"]
     ldFlags = kwargs["ldFlags"]
     cmd = [linker] + \
+        objects + \
         ["-L%s" % p for p in libraryPaths] + \
         ["-l%s" % l for l in libraries] + \
         ldFlags + \
