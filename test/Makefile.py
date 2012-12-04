@@ -177,10 +177,6 @@ for m in modules:
             includePaths=includePaths,
             source=source,
             object=target)
-        buildDepend(compiler=compiler,
-            includePaths=includePaths,
-            source=source,
-            depend=depend)
 
 # Example:
 # --------
