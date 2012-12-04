@@ -249,6 +249,7 @@ def archive(**kwargs):
     require=["executable"],
     defaults={
         "linker": DEFAULT_LINKER,
+        "linkFlags": [],
         "libpaths": [],
         "libraries": [],
         "objects": [],
@@ -256,12 +257,14 @@ def archive(**kwargs):
     })
 def link(**kwargs):
     linker = kwargs["linker"]
+    linkFlags = kwargs["linkFlags"]
     libraryPaths = kwargs["libpaths"]
     libraries = kwargs["libraries"]
     objects = kwargs["objects"]
     executable = kwargs["executable"]
     ldFlags = kwargs["ldFlags"]
     cmd = [linker] + \
+        linkFlags + \
         objects + \
         ["-L%s" % p for p in libraryPaths] + \
         ["-l%s" % l for l in libraries] + \
