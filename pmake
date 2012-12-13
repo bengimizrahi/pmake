@@ -24,7 +24,6 @@ from collections import namedtuple
 import pprint
 import inspect
 
-
 ENABLE_COLOR = True
 DEBUG_LOGS = False
 SHOW_DIRTY_DEPENDENCIES = False
@@ -35,8 +34,7 @@ INTERPRETER = False
 
 COLORS = {"blue": "\033[1;34m", "default": "\x1B[m", "yellow": "\033[1;33m",
     "magenda": "\033[1;31m", "white": "\033[1;37m", "green": "\033[1;32m",
-    "red": "\033[1;31m",
-}
+    "red": "\033[1;31m"}
 NOCOLORS = dict(map(lambda c: (c, ""), COLORS))
 
 DEFAULT_COMPILER = "gcc"
@@ -295,8 +293,7 @@ except IOError:
 
 # ----------------- pmake -----------------------
 
-if __name__ == "__main__":
-
+def main():
     global COLORS, DEBUG_LOGS, PREVIEW_MAKE
 
     target = parsedArgs.target
@@ -309,22 +306,21 @@ if __name__ == "__main__":
         PREVIEW_MAKE = True
     if not ENABLE_COLOR:
         COLORS = NOCOLORS
-
     if DUMP_PHONIES:
         print "All phony targets:"
         pprint.pprint(phonies)
-
     if DUMP_RULES:
         print "All rules are:"
         pprint.pprint(rules.values())
         print
-    
     if not rules.get(target):
         print "Error: target '%s' not found" % target
         exit(1)
-
     if INTERPRETER:
         import pdb
         pdb.set_trace()
-
     make(target)
+
+if __name__ == "__main__":
+
+    main()
