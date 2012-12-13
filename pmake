@@ -16,6 +16,8 @@ parser.add_argument("-p", "--preview",
 parser.add_argument("-D", "--define", metavar="key=value",
     action="append", dest="keyvalues",
     help="Define variables which can override default values.")
+parser.add_argument("-c", "--disable-color", action="store_true",
+    default=False, dest="disableColor", help="Disable color in output.")
 parsedArgs = parser.parse_args()
 
 import subprocess, select
@@ -305,7 +307,7 @@ def main():
         DEBUG_LOGS = True
     if parsedArgs.preview:
         PREVIEW_MAKE = True
-    if not ENABLE_COLOR:
+    if not ENABLE_COLOR or parsedArgs.disableColor:
         COLORS = NOCOLORS
     if DUMP_PHONIES:
         print "All phony targets:"
