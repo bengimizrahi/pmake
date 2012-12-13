@@ -5,7 +5,8 @@
 import argparse
 
 parser = argparse.ArgumentParser(usage="%(prog)s [options] [target]")
-parser.add_argument("target", nargs="?", default="all", help="Target to be made.")
+parser.add_argument("target", nargs="?", default="all",
+    help="Target to be made.")
 parser.add_argument("-v", "--verbose",
     action="store_true", default=False,
     dest="verbosity", help="Print debug logs during make.")
