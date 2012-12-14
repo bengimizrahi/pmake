@@ -5,7 +5,7 @@
 import argparse
 
 parser = argparse.ArgumentParser(usage="%(prog)s [options] [target]")
-parser.add_argument("target", nargs="?", default="all",
+parser.add_argument("target", nargs="?", default=None,
     help="Target to be made.")
 parser.add_argument("-v", "--verbose",
     action="store_true", default=False,
@@ -45,6 +45,8 @@ DEFAULT_ARCHIVER = "ar"
 DEFAULT_LINKER = "gcc"
 
 rules = {}
+goal = None
+
 phonies = set()
 
 class cd(object):
@@ -108,8 +110,11 @@ def rule(targets, prerequisites=None, *args, **kwargs):
             callable(prerequisites), \
         "'prerequisites' can only be a 'None', 'str', 'list' or a callable."
     def ruleDecorator(recipe):
+        global goal
         for t in type(targets) == list and targets or [targets]:
             r = Rule(t, prerequisites, recipe, args, kwargs)
+            if not rules:
+                goal = r.target
             rlist = rules.setdefault(r.target, [])
             rlist.append(r)
         return lambda target: None
@@ -298,8 +303,10 @@ except IOError:
 
 def main():
     global COLORS, DEBUG_LOGS, PREVIEW_MAKE
+    global goal
 
-    target = parsedArgs.target
+    if parsedArgs.target:
+        goal = parsedArgs.target
     if parsedArgs.keyvalues:
         for kv in parsedArgs.keyvalues:
             exec(kv)
@@ -316,13 +323,13 @@ def main():
         print "All rules are:"
         pprint.pprint(rules.values())
         print
-    if not rules.get(target):
-        print "Error: target '%s' not found" % target
+    if not rules.get(goal):
+        print "Error: target '%s' not found" % goal
         exit(1)
     if INTERPRETER:
         import pdb
         pdb.set_trace()
-    make(target)
+    make(goal)
 
 if __name__ == "__main__":
 
