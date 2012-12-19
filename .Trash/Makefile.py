@@ -59,6 +59,9 @@ modules = {
             "oam/fm/inc", "oam/api", "oam/libsoap"],
         "extincpaths": [openSslIncDir, picogpioIncDir,
             "osl/openssl/include"],
+        "defines": ["WITH_OPENSSL", "WITH_COOKIES", "OAM_ENABLED", "TR98",
+            "CHECK_VAL_IN_CONFIG_FILE", "OAM_CLI_FEATURE", "OAM_LED_FEATURE"]
+            # "_ALARM_OPTIMIZATION_", "CLI_DEBUG"]
     },
     "son" : {
         "depends": ["oam", "cmm"],
