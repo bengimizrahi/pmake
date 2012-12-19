@@ -216,29 +216,23 @@ def makeExecutable2(target):
 # --------
 # .PHONY: rns
 # rns:
-#     cd rns
-#     make
-#     cd ..
+#     make -C rns
 
 Phony("rns")
 @rule("rns", None)
 def makeRns(target):
-    with cd("rns"):
-        runShellCommand("make", verbose=True)
+    runShellCommand("make -C rns", verbose=True)
 
 # Example:
 # --------
 # .PHONY: rncwrapper
 # rncwrapper:
-#     cd rrm/rncwrapper
-#     make
-#     cd ../..
+#     make -C rrm/rncwrapper
 
 Phony("rncwrapper")
 @rule("rncwrapper", None)
 def makeRncwrapper(target):
-    with cd("rrm/rncwrapper"):
-        runShellCommand("make", verbose=True)
+    runShellCommand("make -C rrm/rncwrapper", verbose=True)
 
 # Example:
 # --------
@@ -416,26 +410,20 @@ for m in modules:
 # --------
 # .PHONY: clean_rns
 # clean_rns:
-#     cd rns
-#     make clean
-#     cd ..
+#     make -C rns clean
 
 Phony("clean_rns")
 @rule("clean_rns")
 def makeCleanRns(target):
-    with cd("rns"):
-        runShellCommand("make clean", verbose=True)
+    runShellCommand("make -C rns clean", verbose=True)
 
 # Example:
 # --------
 # .PHONY: clean_rncwrapper
 # clean_rncwrapper:
-#     cd rrm/rncwrapper
-#     make clean
-#     cd ../..
+#     make -C rrm/rncwrapper clean
 
 Phony("clean_rncwrapper")
 @rule("clean_rncwrapper")
 def makeCleanRncwrapper(target):
-    with cd("rrm/rncwrapper"):
-        runShellCommand("make clean", verbose=True)
+    runShellCommand("make -C rrm/rncwrapper clean", verbose=True)
