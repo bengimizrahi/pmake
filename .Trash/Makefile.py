@@ -89,12 +89,6 @@ modules = {
         "defines": ["GNU_CC", "xPC73X2_BUILD", "FREQ=19.2", "DEBUG",
             "API_BUILD", "TOOLS_BSP=4", "KERNEL_2_6_30_PLUS"],
     },
-    "fmw" : {
-        "depends": ["oam", "son", "rrm", "sec", "cmm"],
-        "extincpaths": ["osl/openssl/include"],
-        "cflags": ["-O2", "-Wshadow", "-Wcast-qual", "-Wstrict-prototypes"],
-        "defines": ["FAP_DEBUG_SWITCH=1", "FWEXT_UTILITY"],
-    },
     "rrm": {
         "depends": ["cmm", "oam"],
         "sourcefilter":
