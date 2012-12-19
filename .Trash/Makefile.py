@@ -17,7 +17,7 @@ crossCompiler = "arm-none-linux-gnueabi-"
 compiler = crossCompiler + "gcc"
 linker = crossCompiler + "gcc"
 ar = crossCompiler + "ar"
-commonCFlags = ["-Wall", "-O3", "-Wcast-qual", "-Wstrict-prototypes"]
+commonCFlags = ["-Wall", "-Wshadow", "-O3", "-Wcast-qual", "-Wstrict-prototypes"]
 commonDefines = ["OAM_CLI_FEATURE", "FAP_DEBUG_SWITCH=1", "FWEXT_UTILITY",
     "PC302", "_SON_RANDOMIZE_PSC_", "_ALARM_OPTIMIZATION_",
     "CLEAN_NPT_LOCK_FILE"]
