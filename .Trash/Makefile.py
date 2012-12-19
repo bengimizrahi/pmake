@@ -20,9 +20,8 @@ ar = crossCompiler + "ar"
 commonCFlags = ["-Wall", "-Wshadow", "-O3", "-Wcast-qual", "-Wstrict-prototypes"]
 commonDefines = ["OAM_CLI_FEATURE", "FAP_DEBUG_SWITCH=1", "FWEXT_UTILITY",
     "PC302", "_SON_RANDOMIZE_PSC_", "_ALARM_OPTIMIZATION_",
-    "CLEAN_NPT_LOCK_FILE"]
-     # "_SON_RANDOMIZE_LAC_", "_FAULT_RECOVERY_OPTIMIZATION_",
-     # "OPEN_384K"
+    "CLEAN_NPT_LOCK_FILE", "_SON_RANDOMIZE_LAC_"]
+    #"_FAULT_RECOVERY_OPTIMIZATION_", "OPEN_384K", "FAP_MEM_DBG"]
 commonLdFlags = ["-Xlinker", "--start-group"]
 buildDir = ".build"
 activeConfiguration = "debug"
