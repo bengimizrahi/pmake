@@ -284,10 +284,10 @@ def link(**kwargs):
     ldFlags = kwargs["ldFlags"]
     cmd = [linker] + \
         linkFlags + \
+        ldFlags + \
         objects + \
         ["-L%s" % p for p in libraryPaths] + \
         ["-l%s" % l for l in libraries] + \
-        ldFlags + \
         ["-o", executable]
     runShellCommand(cmd, verbose=True)
 
