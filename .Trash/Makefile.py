@@ -207,7 +207,7 @@ def makeExecutable(target):
 # --------
 # ./build/Debug/fap.debug: rns rncwrapper
 
-@rule(getExecutablePath(), ["rns", "rncwrapper"])
+@rule(getExecutablePath(), ["rns", "rncwrapper", "soap"])
 def makeExecutable2(target):
     pass
 
@@ -232,6 +232,17 @@ Phony("rncwrapper")
 @rule("rncwrapper", None)
 def makeRncwrapper(target):
     runShellCommand("make -C rrm/rncwrapper", verbose=True)
+
+# Example:
+# --------
+# .PHONY: soap
+# soap:
+#     make -C oam/soap
+
+Phony("soap")
+@rule("soap", None)
+def makeSoap(target):
+    runShellCommand("make -C oam/soap", verbose=True)
 
 # Example:
 # --------
@@ -386,7 +397,7 @@ Phony("clean_" + program)
 def makeCleanApp(target):
     runShellCommand(["rm", "-rf", getExecutablePath()], verbose=True)
 
-@rule("clean_" + program, ["clean_rns", "clean_rncwrapper"])
+@rule("clean_" + program, ["clean_rns", "clean_rncwrapper", "clean_soap"])
 def makeCleanApp2(target):
     pass
 
@@ -426,3 +437,14 @@ Phony("clean_rncwrapper")
 @rule("clean_rncwrapper")
 def makeCleanRncwrapper(target):
     runShellCommand("make -C rrm/rncwrapper clean", verbose=True)
+
+# Example:
+# --------
+# .PHONY: clean_soap
+# clean_soap:
+#     make -C oam/soap clean
+
+Phony("clean_soap")
+@rule("clean_soap")
+def makeCleansoap(target):
+    runShellCommand("make -C oam/soap clean", verbose=True)
