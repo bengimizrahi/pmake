@@ -173,7 +173,7 @@ class DotGenerator(object):
   label="Example";
   style=filled;
   color=lightgrey;
-  "dirty file";
+  "dirty file" [style=filled fillcolor=white];
   "recipe executed" [style=filled fillcolor="#6495ed"];
  }
 }"""
