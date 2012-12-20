@@ -120,10 +120,26 @@ def rule(targets, prerequisites=None, *args, **kwargs):
         return lambda target: None
     return ruleDecorator
 
+observers = []
+
+def setupObservers():
+    for o in observers:
+        o.setup()
+
+def notify(event, *args):
+    for o in observers:
+        o.onEvent(event, *args)
+
+def teardownObservers():
+    for o in observers:
+        o.teardown()
+
 def make(target):
+    notify("BEGIN", target)
     shouldRunRecipe = False
     dirtyFiles = []
     if not target in rules:
+        notify("END")
         return False
     if DEBUG_LOGS or PREVIEW_MAKE: print "make(%s)" % target
     for r in rules[target]:
@@ -139,6 +155,8 @@ def make(target):
                         os.path.getmtime(target) < os.path.getmtime(p)))):
                     dirtyFiles.append(p)
                     shouldRunRecipe = True
+    if dirtyFiles:
+        notify("DIRTY_FILES_DETECTED", dirtyFiles)
     if SHOW_DIRTY_DEPENDENCIES:
             print "%(yellow)s%%s%(default)s" % COLORS % "%s <- %s" % (
                 target, dirtyFiles)
@@ -148,12 +166,15 @@ def make(target):
                 print "%s(%s).%s()" % (r.target, prerequisites,
                     r.recipe.__name__)
                 continue
+            notify("RUN_RECIPE")
             result = r.runRecipe()
             if result:
                 exit(result)
+        notify("END")
         return True
     else:
         if DEBUG_LOGS: print "No need to make %s." % target
+        notify("END")
         return False
 
 def cache(f):
@@ -329,7 +350,9 @@ def main():
     if INTERPRETER:
         import pdb
         pdb.set_trace()
+    setupObservers()
     make(goal)
+    teardownObservers()
 
 if __name__ == "__main__":
 
