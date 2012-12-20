@@ -210,6 +210,7 @@ def make(target):
             for p in prerequisites:
                 if make(p) or ((not target in phonies) and (
                         not os.path.exists(target) or
+                        not os.path.exists(p) or
                         ((not p in phonies) and
                         os.path.getmtime(target) < os.path.getmtime(p)))):
                     dirtyFiles.append(p)
