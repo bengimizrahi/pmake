@@ -13,6 +13,9 @@ parser.add_argument("-v", "--verbose",
 parser.add_argument("-p", "--preview",
     action="store_true", default=False,
     dest="preview", help="Don't make, just preview.")
+parser.add_argument("-g", "--graph",
+    dest="graphfile",
+    help="Draw the dependency graph during build in graphviz dot format")
 parser.add_argument("-D", "--define", metavar="key=value",
     action="append", dest="keyvalues",
     help="Define variables which can override default values.")
@@ -119,6 +122,62 @@ def rule(targets, prerequisites=None, *args, **kwargs):
             rlist.append(r)
         return lambda target: None
     return ruleDecorator
+
+
+class DotGenerator(object):
+    def __init__(self, filename):
+        self.filename = filename
+    def setup(self):
+        self.file = file(self.filename, "w")
+        self.targetStack = []
+        self.stateStack = []
+        self.nodes = {}
+        self.edges = set()
+    def onEvent(self, event, *args):
+        if event == "BEGIN":
+            self.targetStack.append(*args)
+            self.stateStack.append([])
+        elif event == "DIRTY_FILES_DETECTED":
+            self.stateStack[-1].append("Dirty")
+            for d in args[0]:
+                node = self.nodes.setdefault(d, {})
+                node["label"] = d
+                self.edges.add((self.targetStack[-1], d))
+        elif event == "END":
+            if "Recipe" in self.stateStack[-1]:
+                node = self.nodes.setdefault(self.targetStack[-1], {})
+                node["label"] = self.targetStack[-1]
+                node["style"] = "filled"
+                node["fillcolor"] = "#6495ed"
+            if "Recipe" in self.stateStack[-1]:
+                if len(self.targetStack) >= 2:
+                    self.edges.add((self.targetStack[-2], self.targetStack[-1]))
+            self.targetStack.pop()
+            self.stateStack.pop()
+        elif event == "RUN_RECIPE":
+            self.stateStack[-1].append("Recipe")
+        else:
+            assert False, "Unhandled event: {}({})".format(event, args)
+    def teardown(self):
+        print >>self.file, \
+"""digraph G {
+ subgraph A {"""
+        for n in self.nodes.itervalues():
+            print >>self.file, '  "{}" [{}];'.format(n["label"],
+                " ".join(('{}="{}"'.format(k, v) for k, v in n.iteritems())))
+        for e in self.edges:
+            print >>self.file, '  "{}" -> "{}";'.format(*e)
+        print >>self.file, \
+"""}
+ subgraph cluster_B {
+  label="Example";
+  style=filled;
+  color=lightgrey;
+  "dirty file";
+  "recipe executed" [style=filled fillcolor="#6495ed"];
+ }
+}"""
+        self.file.close()
 
 observers = []
 
@@ -350,6 +409,8 @@ def main():
     if INTERPRETER:
         import pdb
         pdb.set_trace()
+    if parsedArgs.graphfile:
+        observers.append(DotGenerator(parsedArgs.graphfile))
     setupObservers()
     make(goal)
     teardownObservers()
