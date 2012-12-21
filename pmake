@@ -32,6 +32,7 @@ import inspect
 
 ENABLE_COLOR = True
 DEBUG_LOGS = False
+WARN = False
 SHOW_DIRTY_DEPENDENCIES = False
 DUMP_RULES = False
 DUMP_PHONIES = False
@@ -108,7 +109,9 @@ def rule(targets, prerequisites=None, *args, **kwargs):
     assert type(targets) in [str, list], \
         "'targets' can only be a 'str' or 'list' object."
     if type(targets) == list:
-        assert targets, "'targets' can not be an empty list."
+        if not targets:
+            if WARN: print "Warning: 'targets' is empty list, ignoring."
+            return lambda target: None;
     assert type(prerequisites) in [type(None), str, list] or \
             callable(prerequisites), \
         "'prerequisites' can only be a 'None', 'str', 'list' or a callable."
