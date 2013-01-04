@@ -16,6 +16,10 @@ parser.add_argument("-p", "--preview",
 parser.add_argument("-g", "--graph",
     dest="graphfile",
     help="Draw the dependency graph during build in graphviz dot format")
+parser.add_argument("-ge",
+    action="store_const", const="True", default=False,
+    dest="excludeNonTargets",
+    help="Exclude non-target items while drawing the dependency graph")
 parser.add_argument("-D", "--define", metavar="key=value",
     action="append", dest="keyvalues",
     help="Define variables which can override default values.")
@@ -125,62 +129,6 @@ def rule(targets, prerequisites=None, *args, **kwargs):
             rlist.append(r)
         return lambda target: None
     return ruleDecorator
-
-
-class DotGenerator(object):
-    def __init__(self, filename):
-        self.filename = filename
-    def setup(self):
-        self.file = file(self.filename, "w")
-        self.targetStack = []
-        self.stateStack = []
-        self.nodes = {}
-        self.edges = set()
-    def onEvent(self, event, *args):
-        if event == "BEGIN":
-            self.targetStack.append(*args)
-            self.stateStack.append([])
-        elif event == "DIRTY_FILES_DETECTED":
-            self.stateStack[-1].append("Dirty")
-            for d in args[0]:
-                node = self.nodes.setdefault(d, {})
-                node["label"] = d
-                self.edges.add((self.targetStack[-1], d))
-        elif event == "END":
-            if "Recipe" in self.stateStack[-1]:
-                node = self.nodes.setdefault(self.targetStack[-1], {})
-                node["label"] = self.targetStack[-1]
-                node["style"] = "filled"
-                node["fillcolor"] = "#6495ed"
-            if "Recipe" in self.stateStack[-1]:
-                if len(self.targetStack) >= 2:
-                    self.edges.add((self.targetStack[-2], self.targetStack[-1]))
-            self.targetStack.pop()
-            self.stateStack.pop()
-        elif event == "RUN_RECIPE":
-            self.stateStack[-1].append("Recipe")
-        else:
-            assert False, "Unhandled event: {}({})".format(event, args)
-    def teardown(self):
-        print >>self.file, \
-"""digraph G {
- subgraph A {"""
-        for n in self.nodes.itervalues():
-            print >>self.file, '  "{}" [{}];'.format(n["label"],
-                " ".join(('{}="{}"'.format(k, v) for k, v in n.iteritems())))
-        for e in self.edges:
-            print >>self.file, '  "{}" -> "{}";'.format(*e)
-        print >>self.file, \
-"""}
- subgraph cluster_B {
-  label="Example";
-  style=filled;
-  color=lightgrey;
-  "dirty file" [style=filled fillcolor=white];
-  "recipe executed" [style=filled fillcolor="#6495ed"];
- }
-}"""
-        self.file.close()
 
 observers = []
 
@@ -385,6 +333,62 @@ except IOError:
 
 # ----------------- pmake -----------------------
 
+def produceDotGraph(filename, excludeNonTargets):
+    dotFileTemplate = \
+"""digraph G {{
+ subgraph A {{
+  {}
+ }}
+ subgraph cluster_B {{
+  label="Example";
+  style=filled;
+  color=lightgrey;
+  "Phony Target" [style=filled fillcolor="#6495ed"];
+  "File Target" [style=filled fillcolor=white];
+ }}
+}}
+"""
+    DotNode = namedtuple("DotNode",
+        ["name", "type", "targetEdges", "nonTargetEdges"])
+    dotNodes = {}
+    for t in rules:
+        dotNodes[t] = DotNode(name=t,
+            type=t in phonies and "phony" or "target",
+            targetEdges=[], nonTargetEdges=[])
+    for t in rules:
+        for r in rules[t]: 
+            if not r.getPrerequisites():
+                continue
+            targetPrerequisites = filter(lambda p: p in rules,
+                r.getPrerequisites())
+            for p in targetPrerequisites:
+                dotNodes[t].targetEdges.append(p)
+            nonTargetPrerequisites = filter(lambda p: not p in rules,
+                r.getPrerequisites())
+            for p in nonTargetPrerequisites:
+                dotNodes[t].nonTargetEdges.append(p)
+    dotGraph = []
+    for n in dotNodes.values():
+        dotGraph.append((n.type == "phony" and
+            '  "{0}" [label="{0}" style=filled fillcolor="#6495ed" {1}];' or
+            '  "{0}" [label="{0} {1}"];').format(n.name,
+            n.name == goal and "peripheries=2" or ""))
+    dotGraph.append("  ")
+    ident = 0
+    for n in dotNodes.values():
+        for e in n.targetEdges:
+            dotGraph.append('"{0}" -> "{1}";'.format(n.name, e))
+        if excludeNonTargets:
+            continue
+        if n.nonTargetEdges:
+            label="\\n".join(n.nonTargetEdges)
+            dotGraph.append('nonTargetNodes{} [label="{}" shape=rectangle];'.format(
+                ident, label))
+            dotGraph.append('"{0}" -> nonTargetNodes{1};'.format(n.name, ident))
+            ident += 1
+    with file(filename, "w") as f:
+        print >>f, dotFileTemplate.format("\n".join(dotGraph))
+
 def main():
     global COLORS, DEBUG_LOGS, PREVIEW_MAKE
     global goal
@@ -414,11 +418,11 @@ def main():
         import pdb
         pdb.set_trace()
     if parsedArgs.graphfile:
-        observers.append(DotGenerator(parsedArgs.graphfile))
+        produceDotGraph(parsedArgs.graphfile, parsedArgs.excludeNonTargets)
+        exit(0)
     setupObservers()
     make(goal)
     teardownObservers()
 
 if __name__ == "__main__":
-
     main()
